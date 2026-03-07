@@ -1,0 +1,15 @@
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         version="6.0">
+
+    <!-- 
+      PageController is now mapped via @WebServlet annotation in the Java class.
+      This file remains for default configuration and welcome file handling.
+    -->
+
+    <!-- CORRECTLY SERVE STATIC ASSETS -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/assets/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>
