@@ -1,21 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-        <!DOCTYPE html>
-        <html lang="en">
+        <%@ include file="components/adminHeader.jsp" %>
 
-        <head>
-            <meta charset="UTF-8">
-            <title>Messages - Easy Rental Admin</title>
-            <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/bootstrap/css/bootstrap.min.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-            <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/modern-global.css">
-        </head>
-
-        <body class="bg-light">
-
-            <%@ include file="components/adminHeader.jsp" %>
-
-                <div class="container-fluid mt-4">
+                <div class="container-fluid">
                     <div class="row">
                         <div class="col-12">
                             <div class="card border-0 shadow-sm">
@@ -145,7 +132,4 @@
                     </div>
                 </div>
 
-                <script src="${pageContext.request.contextPath}/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-        </body>
-
-        </html>
+                <%@ include file="components/adminFooter.jsp" %>

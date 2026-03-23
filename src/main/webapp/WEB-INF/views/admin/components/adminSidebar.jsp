@@ -1,19 +1,81 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
-</head>
-<body>
-<div class="bg-light p-3" style="width:200px; float:left; height:100vh;">
-    <ul class="nav flex-column">
-        <li class="nav-item"><a href="dashboard.jsp" class="nav-link">Dashboard</a></li>
-        <li class="nav-item"><a href="manageCars.jsp" class="nav-link">Manage Cars</a></li>
-        <li class="nav-item"><a href="manageUsers.jsp" class="nav-link">Manage Users</a></li>
-        <li class="nav-item"><a href="bookings.jsp" class="nav-link">Bookings</a></li>
-    </ul>
-</div>
-</body>
-</html>
+<!-- ========== ADMIN SIDEBAR ========== -->
+<aside class="admin-sidebar" id="adminSidebar">
+
+    <!-- Brand / Logo -->
+    <div class="sidebar-brand">
+        <img src="${pageContext.request.contextPath}/assets/img/icon.png" alt="Easy Rental Logo">
+        <div class="brand-text">Easy <span>Rental</span></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        <div class="nav-label">Main</div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/dashboard" data-title="Dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/vehicles" data-title="Vehicles">
+                    <i class="fas fa-car"></i>
+                    <span>Vehicles</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/rent" data-title="Requests">
+                    <i class="fas fa-list-alt"></i>
+                    <span>Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/customers" data-title="Customers">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-label">Management</div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/coupons" data-title="Coupons">
+                    <i class="fas fa-tags"></i>
+                    <span>Coupons</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/messages" data-title="Messages">
+                    <i class="fas fa-envelope"></i>
+                    <span>Messages</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/notifications" data-title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-label">Account</div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/profile" data-title="Profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="sidebar-footer">
+        <a href="${pageContext.request.contextPath}/home" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+
+</aside>

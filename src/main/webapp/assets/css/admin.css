@@ -5,7 +5,7 @@
 }
 
 ::-webkit-scrollbar-track {
-
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -16,26 +16,7 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #ffb400;
 }
-a:hover{     /*change mouse fourcus color to yellow in menu*/
-    color: #ffb400;
-    font-weight: bold;
-
-}
-
-header{
-    position: fixed;
-}
-
-
-header>nav>div>ul{
-    position: relative;
-    left: 15vw;
-}
-
-.navbar-nav .nav-link {
-    font-weight: bold;
-    margin: 0 20px;
-}
+/* Old header/navbar styles removed — now using sidebar layout */
 
 
 
