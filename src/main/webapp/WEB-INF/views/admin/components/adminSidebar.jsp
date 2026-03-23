@@ -3,8 +3,8 @@
 
     <!-- Brand / Logo -->
     <div class="sidebar-brand">
-        <img src="${pageContext.request.contextPath}/assets/img/icon.png" alt="Easy Rental Logo">
-        <div class="brand-text">Easy <span>Rental</span></div>
+        <i class="fas fa-car-side" style="font-size: 1.6rem; color: var(--sidebar-accent);"></i>
+        <div class="brand-text"><span>RENTIFY</span></div>
     </div>
 
     <!-- Navigation -->
@@ -49,6 +49,12 @@
                 <a class="nav-link" href="${pageContext.request.contextPath}/admin/messages" data-title="Messages">
                     <i class="fas fa-envelope"></i>
                     <span>Messages</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/reviews" data-title="Reviews">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
                 </a>
             </li>
             <li class="nav-item">

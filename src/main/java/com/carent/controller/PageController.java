@@ -88,6 +88,9 @@ public class PageController extends HttpServlet {
             case "/admin/profile":
                 request.getRequestDispatcher("/WEB-INF/views/admin/profile.jsp").forward(request, response);
                 break;
+            case "/admin/reviews":
+                request.getRequestDispatcher("/WEB-INF/views/admin/reviews.jsp").forward(request, response);
+                break;
                 
             default:
                 // Handle admin sub-paths

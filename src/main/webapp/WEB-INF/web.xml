@@ -61,6 +61,10 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/reviews</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
         <url-pattern>/admin/*</url-pattern>
     </servlet-mapping>
 
