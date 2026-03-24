@@ -64,24 +64,24 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <form>
+                                <form id="changePasswordForm">
                                     <div class="mb-3">
                                         <label class="form-label">Current Password</label>
-                                        <input type="password" class="form-control">
+                                        <input type="password" class="form-control" name="currentPassword" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">New Password</label>
-                                        <input type="password" class="form-control">
+                                        <input type="password" class="form-control" name="newPassword" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Confirm New Password</label>
-                                        <input type="password" class="form-control">
+                                        <input type="password" class="form-control" name="confirmNewPassword" required>
                                     </div>
                                 </form>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary-custom">Update Password</button>
+                                <button type="submit" class="btn btn-primary-custom">Update Password</button>
                             </div>
                         </div>
                     </div>

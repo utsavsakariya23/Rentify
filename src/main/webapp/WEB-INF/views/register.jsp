@@ -4,14 +4,36 @@
         <main class="d-flex align-items-center" style="min-height: 80vh; padding-top: 80px; background-color: #f8f9fa;">
             <div class="container my-5">
                 <div class="row justify-content-center">
-                    <div class="col-lg-8">
+                    <div class="col-lg-7">
                         <div class="card card-modern border-0 p-5 shadow-lg">
                             <div class="text-center mb-5">
                                 <h3 class="fw-bold text-dark">Create Account</h3>
                                 <p class="text-muted">Join us today and start your journey</p>
                             </div>
 
-                            <form id="registerForm">
+                            <% if (request.getParameter("error") != null) { %>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <% String regError = request.getParameter("error");
+                                   if ("exists".equals(regError)) { %>
+                                    Username or email already exists. Please try different ones.
+                                <% } else if ("username_taken".equals(regError)) { %>
+                                    This username is already taken. Please choose a different one.
+                                <% } else if ("email_taken".equals(regError)) { %>
+                                    This email is already registered. Please use a different email.
+                                <% } else if ("mismatch".equals(regError)) { %>
+                                    Passwords do not match. Please try again.
+                                <% } else if ("empty".equals(regError)) { %>
+                                    Please fill in all required fields.
+                                <% } else { %>
+                                    Registration failed: 
+                                    <strong><%= request.getParameter("detail") != null ? request.getParameter("detail") : "Unknown error. Check Tomcat console." %></strong>
+                                <% } %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            <% } %>
+
+                            <form id="registerForm" action="${pageContext.request.contextPath}/perform_register" method="post">
                                 <div class="row g-4">
                                     <!-- Personal Details -->
                                     <div class="col-md-6">
@@ -19,68 +41,44 @@
 
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">FULL NAME</label>
-                                            <input type="text" class="form-control bg-light border-0"
-                                                placeholder="Enter your Name">
+                                            <input type="text" class="form-control bg-light border-0" name="fullName"
+                                                placeholder="Enter your Name" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">EMAIL ADDRESS</label>
-                                            <input type="email" class="form-control bg-light border-0"
-                                                placeholder="Enter your Email">
+                                            <input type="email" class="form-control bg-light border-0" name="email"
+                                                placeholder="Enter your Email" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">PHONE NUMBER</label>
-                                            <input type="tel" class="form-control bg-light border-0"
-                                                placeholder="Enter your Phone">
+                                            <input type="tel" class="form-control bg-light border-0" name="phone"
+                                                placeholder="Enter your Phone" required>
                                         </div>
                                     </div>
 
-                                    <!-- Account & Identification -->
+                                    <!-- Account Setup -->
                                     <div class="col-md-6">
                                         <h6 class="text-primary fw-bold text-uppercase mb-3">Account Setup</h6>
 
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">USERNAME</label>
-                                            <input type="text" class="form-control bg-light border-0"
-                                                placeholder="Choose username">
+                                            <input type="text" class="form-control bg-light border-0" name="username"
+                                                placeholder="Choose username" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">PASSWORD</label>
-                                            <input type="password" class="form-control bg-light border-0"
-                                                placeholder="Create password">
+                                            <input type="password" class="form-control bg-light border-0" name="password"
+                                                placeholder="Create password" required>
                                         </div>
-
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">CONFIRM PASSWORD</label>
+                                            <input type="password" class="form-control bg-light border-0" name="confirmPassword"
+                                                placeholder="Confirm password" required>
+                                        </div>
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">LICENSE NO</label>
-                                            <input type="text" class="form-control bg-light border-0"
-                                                placeholder="Identity Number">
-                                        </div>
-                                    </div>
-
-                                    <!-- Documents Upload -->
-                                    <div class="col-12 mt-4">
-                                        <h6 class="text-primary fw-bold text-uppercase mb-3">Verification Documents</h6>
-                                        <div class="row g-3">
-                                            <div class="col-md-4">
-                                                <div class="border rounded p-3 text-center bg-light">
-                                                    <i class="fas fa-id-card fa-2x text-muted mb-2"></i>
-                                                    <label class="d-block small fw-bold mb-1">ID Front</label>
-                                                    <input type="file" class="form-control form-control-sm">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="border rounded p-3 text-center bg-light">
-                                                    <i class="fas fa-id-card fa-2x text-muted mb-2"></i>
-                                                    <label class="d-block small fw-bold mb-1">ID Back</label>
-                                                    <input type="file" class="form-control form-control-sm">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="border rounded p-3 text-center bg-light">
-                                                    <i class="far fa-id-badge fa-2x text-muted mb-2"></i>
-                                                    <label class="d-block small fw-bold mb-1">Driving License</label>
-                                                    <input type="file" class="form-control form-control-sm">
-                                                </div>
-                                            </div>
+                                            <input type="text" class="form-control bg-light border-0" name="licenseNo"
+                                                placeholder="Driving License Number" required>
                                         </div>
                                     </div>
                                 </div>
@@ -103,4 +101,5 @@
             </div>
         </main>
 
+        <script src="${pageContext.request.contextPath}/assets/js/validation.js"></script>
         <%@ include file="components/footer.jsp" %>

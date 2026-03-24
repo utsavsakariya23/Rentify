@@ -138,10 +138,10 @@
                                     </p>
                                 </div>
                                 <h6 class="fw-bold text-primary"><i class="fas fa-reply me-2"></i>Reply</h6>
-                                <form>
+                                <form id="replyForm1">
                                     <div class="mb-3">
-                                        <textarea class="form-control" rows="5"
-                                            placeholder="Type your reply here..."></textarea>
+                                        <textarea class="form-control" rows="5" name="replyMessage"
+                                            placeholder="Type your reply here..." required></textarea>
                                     </div>
                                 </form>
                             </div>
@@ -151,7 +151,7 @@
                                 <div>
                                     <button type="button" class="btn btn-secondary me-2"
                                         data-bs-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-primary"><i
+                                    <button type="submit" class="btn btn-primary"><i
                                             class="fas fa-paper-plane me-1"></i> Send Reply</button>
                                 </div>
                             </div>

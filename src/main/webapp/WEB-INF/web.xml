@@ -53,6 +53,22 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
+        <url-pattern>/perform_register</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/update_profile</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/change_password</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/validate_unique</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
         <url-pattern>/admin/rent</url-pattern>
     </servlet-mapping>
     <servlet-mapping>

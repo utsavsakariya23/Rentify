@@ -61,15 +61,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form id="addCouponForm">
                             <div class="mb-3">
                                 <label class="form-label">Coupon Code</label>
-                                <input type="text" class="form-control" placeholder="e.g. SUMMER2026">
+                                <input type="text" class="form-control" name="couponCode" placeholder="e.g. SUMMER2026" required>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label">Discount Value</label>
-                                    <input type="number" class="form-control" placeholder="10">
+                                    <input type="number" class="form-control" name="discountValue" placeholder="10" required>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Type</label>
@@ -81,7 +81,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Valid Until</label>
-                                <input type="date" class="form-control">
+                                <input type="date" class="form-control" name="validUntil" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Min Spend Amount (Optional)</label>
@@ -95,7 +95,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary">Create Coupon</button>
+                        <button type="submit" class="btn btn-primary">Create Coupon</button>
                     </div>
                 </div>
             </div>

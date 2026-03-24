@@ -2,6 +2,7 @@ package com.carent.repository;
 
 import com.carent.config.DBConnection;
 import com.carent.model.User;
+import com.carent.util.PasswordUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,20 +14,23 @@ import java.util.List;
 public class UserDAO {
 
     /**
-     * Authenticate a user by username and password.
-     * Returns the User object if credentials match, otherwise null.
+     * Authenticate a user by username and hashed password.
+     * Fetches user by username, then verifies the password hash.
      */
     public User getUserByUsernameAndPassword(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, username);
-            ps.setString(2, password);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapResultSetToUser(rs);
+                    User user = mapResultSetToUser(rs);
+                    // Verify entered password against stored hash
+                    if (PasswordUtil.verifyPassword(password, user.getPassword())) {
+                        return user;
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -36,10 +40,86 @@ public class UserDAO {
     }
 
     /**
-     * Register a new user (Customer).
-     * Returns true if insertion was successful.
+     * Check if a username already exists in the database.
      */
-    public boolean insertUser(User user) {
+    public boolean isUsernameTaken(String username) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Check if an email already exists in the database.
+     */
+    public boolean isEmailTaken(String email) {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Check if a license number already exists in the database.
+     */
+    public boolean isLicenseNoTaken(String licenseNo) {
+        String sql = "SELECT COUNT(*) FROM users WHERE license_no = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, licenseNo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Check if a username or email already exists.
+     * Returns true if either is taken.
+     */
+    public boolean isUsernameOrEmailTaken(String username, String email) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ? OR email = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ps.setString(2, email);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("=== CHECK USERNAME/EMAIL FAILED ===");
+            System.out.println("SQL Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Register a new user (Customer).
+     * Returns null if successful, or an error message string on failure.
+     */
+    public String insertUser(User user) {
         String sql = "INSERT INTO users (full_name, email, phone, username, password, license_no, role) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -53,11 +133,15 @@ public class UserDAO {
             ps.setString(6, user.getLicenseNo());
             ps.setString(7, user.getRole() != null ? user.getRole() : "Customer");
 
-            return ps.executeUpdate() > 0;
+            int rows = ps.executeUpdate();
+            if (rows > 0) return null; // success
+            return "No rows inserted";
         } catch (SQLException e) {
+            System.out.println("=== INSERT USER FAILED ===");
+            System.out.println("SQL Error: " + e.getMessage());
             e.printStackTrace();
+            return e.getMessage();
         }
-        return false;
     }
 
     /**
@@ -133,6 +217,25 @@ public class UserDAO {
             ps.setString(4, user.getLicenseNo());
             ps.setString(5, user.getRole());
             ps.setInt(6, user.getUserId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Update user password.
+     * Returns true if update was successful.
+     */
+    public boolean updatePassword(int userId, String newPasswordHash) {
+        String sql = "UPDATE users SET password = ? WHERE user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newPasswordHash);
+            ps.setInt(2, userId);
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

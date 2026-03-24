@@ -5,7 +5,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin - Easy Rental</title>
+        <title>Admin - RENTIFY</title>
 
         <link rel="icon" href="${pageContext.request.contextPath}/assets/img/icon.png" type="image/x-icon">
 

@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
             <footer class="admin-footer">
-                <span class="text-muted">&copy; 2026 Easy Rental Admin Panel. All rights reserved.</span>
+                <span class="text-muted">&copy; 2026 RENTIFY Admin Panel. All rights reserved.</span>
             </footer>
 
             </div><!-- /.admin-content -->
@@ -10,6 +10,7 @@
 <script src="${pageContext.request.contextPath}/assets/bootstrap/js/jquery-3.6.1.min.js"></script>
 <script src="${pageContext.request.contextPath}/assets/bootstrap/js/bootstrap.bundle.js"></script>
 <script src="${pageContext.request.contextPath}/assets/controller/url.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/validation.js"></script>
 
 <script>
 (function() {

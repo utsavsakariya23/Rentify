@@ -11,7 +11,9 @@
                                 style="width: 80px; height: 80px; font-size: 2rem;">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <h5 class="fw-bold mb-0">Utsav Sakariya</h5>
+                            <h5 class="fw-bold mb-0">
+                                <%= session.getAttribute("loggedUser") != null ? ((com.carent.model.User)session.getAttribute("loggedUser")).getFullName() : "Guest" %>
+                            </h5>
                             <small class="text-muted">Member since 2024</small>
                         </div>
 
@@ -19,6 +21,12 @@
                             <a href="#profile" class="list-group-item list-group-item-action active"
                                 data-bs-toggle="list">
                                 <i class="fas fa-user-circle me-2"></i> My Profile
+                            </a>
+                            <a href="#documents" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-file-alt me-2"></i> Documents
+                                <% if (session.getAttribute("docVerified") == null) { %>
+                                <span class="badge bg-warning text-dark rounded-pill float-end">Pending</span>
+                                <% } %>
                             </a>
                             <a href="#bookings" class="list-group-item list-group-item-action" data-bs-toggle="list">
                                 <i class="fas fa-calendar-alt me-2"></i> My Bookings
@@ -28,8 +36,8 @@
                                 <i class="fas fa-bell me-2"></i> Notifications
                                 <span class="badge bg-danger rounded-pill float-end">2</span>
                             </a>
-                            <a href="#" class="list-group-item list-group-item-action text-danger"
-                                onclick="logoutUser()">
+                            <a href="${pageContext.request.contextPath}/logout"
+                                class="list-group-item list-group-item-action text-danger">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
                             </a>
                         </div>
@@ -41,34 +49,173 @@
                     <div class="tab-content">
                         <!-- Profile Section -->
                         <div class="tab-pane fade show active" id="profile">
-                            <div class="card card-modern p-4">
+                            <div class="card card-modern p-4 mb-4">
                                 <h4 class="fw-bold mb-4">Profile Details</h4>
-                                <form>
+
+                                <% if ("profile_updated".equals(request.getParameter("success"))) { %>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-check-circle me-2"></i>Profile updated successfully!
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+                                <% if ("profile_failed".equals(request.getParameter("error"))) { %>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-circle me-2"></i>Failed to update profile. Please try again.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+
+                                <% com.carent.model.User profileUser = (com.carent.model.User) session.getAttribute("loggedUser"); %>
+
+                                <form id="updateProfileForm" action="${pageContext.request.contextPath}/update_profile" method="post">
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold">First Name</label>
-                                            <input type="text" class="form-control" value="utsav">
+                                            <label class="form-label small fw-bold">FULL NAME</label>
+                                            <input type="text" class="form-control" name="fullName"
+                                                value="<%= profileUser != null ? profileUser.getFullName() : "" %>" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Last Name</label>
-                                            <input type="text" class="form-control" value="sakariya">
+                                            <label class="form-label small fw-bold">EMAIL <span class="text-muted">(cannot change)</span></label>
+                                            <input type="email" class="form-control bg-light" 
+                                                value="<%= profileUser != null ? profileUser.getEmail() : "" %>" readonly>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Email</label>
-                                            <input type="email" class="form-control" value="utsavsakariya@example.com"
-                                                disabled>
+                                            <label class="form-label small fw-bold">PHONE</label>
+                                            <input type="tel" class="form-control" name="phone"
+                                                value="<%= profileUser != null ? profileUser.getPhone() : "" %>" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Phone</label>
-                                            <input type="tel" class="form-control" value="+94 77 123 4567">
+                                            <label class="form-label small fw-bold">USERNAME <span class="text-muted">(cannot change)</span></label>
+                                            <input type="text" class="form-control bg-light"
+                                                value="<%= profileUser != null ? profileUser.getUsername() : "" %>" readonly>
                                         </div>
-                                        <div class="col-12">
-                                            <label class="form-label small fw-bold">Address</label>
-                                            <input type="text" class="form-control" value=" Main Street,jetpur">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">LICENSE NO</label>
+                                            <input type="text" class="form-control" name="licenseNo"
+                                                value="<%= profileUser != null ? profileUser.getLicenseNo() : "" %>">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">ROLE</label>
+                                            <input type="text" class="form-control bg-light"
+                                                value="<%= profileUser != null ? profileUser.getRole() : "" %>" readonly>
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-primary-custom mt-4">Save Changes</button>
+                                    <button type="submit" class="btn btn-primary-custom mt-4">
+                                        <i class="fas fa-save me-2"></i>Save Changes
+                                    </button>
                                 </form>
+                            </div>
+
+                            <!-- Change Password Card -->
+                            <div class="card card-modern p-4">
+                                <h4 class="fw-bold mb-4"><i class="fas fa-key text-primary me-2"></i>Change Password</h4>
+
+                                <% if ("password_changed".equals(request.getParameter("success"))) { %>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-check-circle me-2"></i>Password changed successfully!
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+                                <% if ("wrong_password".equals(request.getParameter("error"))) { %>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-circle me-2"></i>Current password is incorrect.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+                                <% if ("password_mismatch".equals(request.getParameter("error"))) { %>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-circle me-2"></i>New passwords do not match.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+                                <% if ("password_failed".equals(request.getParameter("error"))) { %>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-circle me-2"></i>Failed to change password. Please try again.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+
+                                <form id="userChangePasswordForm" action="${pageContext.request.contextPath}/change_password" method="post">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">CURRENT PASSWORD</label>
+                                            <input type="password" class="form-control" name="currentPassword" 
+                                                placeholder="Enter current password" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">NEW PASSWORD</label>
+                                            <input type="password" class="form-control" name="newPassword"
+                                                placeholder="Enter new password" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">CONFIRM NEW PASSWORD</label>
+                                            <input type="password" class="form-control" name="confirmNewPassword"
+                                                placeholder="Confirm new password" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-primary mt-4">
+                                        <i class="fas fa-lock me-2"></i>Update Password
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Documents Section -->
+                        <div class="tab-pane fade" id="documents">
+                            <div class="card card-modern p-4">
+                                <h4 class="fw-bold mb-2">Document Verification</h4>
+                                <p class="text-muted small mb-4">Upload your documents to verify your identity. You must complete verification before you can book a vehicle.</p>
+
+                                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                                    <div>
+                                        <strong>Verification Required!</strong> Please upload your ID and driving license to start booking vehicles.
+                                    </div>
+                                </div>
+
+                                <div class="row g-4">
+                                    <!-- ID Document -->
+                                    <div class="col-md-6">
+                                        <div class="card border h-100">
+                                            <div class="card-body text-center p-4">
+                                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                                    style="width:70px;height:70px">
+                                                    <i class="fas fa-id-card fa-2x text-primary"></i>
+                                                </div>
+                                                <h6 class="fw-bold">Government ID</h6>
+                                                <p class="text-muted small">Upload your Aadhar Card, PAN Card, or Passport</p>
+                                                <span class="badge bg-secondary mb-3"><i class="fas fa-clock me-1"></i>Not Uploaded</span>
+                                                <div>
+                                                    <input type="file" class="form-control form-control-sm" id="idFile" accept="image/*,.pdf">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Driving License -->
+                                    <div class="col-md-6">
+                                        <div class="card border h-100">
+                                            <div class="card-body text-center p-4">
+                                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                                    style="width:70px;height:70px">
+                                                    <i class="far fa-id-badge fa-2x text-primary"></i>
+                                                </div>
+                                                <h6 class="fw-bold">Driving License</h6>
+                                                <p class="text-muted small">Upload front side of your valid driving license</p>
+                                                <span class="badge bg-secondary mb-3"><i class="fas fa-clock me-1"></i>Not Uploaded</span>
+                                                <div>
+                                                    <input type="file" class="form-control form-control-sm" id="licenseFile" accept="image/*,.pdf">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end mt-4">
+                                    <button type="button" class="btn btn-primary-custom px-4">
+                                        <i class="fas fa-upload me-2"></i>Submit Documents
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -88,7 +235,6 @@
 
                                 <div class="tab-content">
                                     <div class="tab-pane fade show active" id="upcoming">
-                                        <!-- Booking Card 1 -->
                                         <div class="card mb-3 border bg-light">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-center">
@@ -118,7 +264,6 @@
                                     </div>
 
                                     <div class="tab-pane fade" id="past">
-                                        <!-- Booking Card 2 -->
                                         <div class="card mb-3 border bg-light">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-center">
@@ -144,8 +289,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-end mt-2">
-                                                    <button class="btn btn-sm btn-outline-secondary">Write
-                                                        Review</button>
+                                                    <button class="btn btn-sm btn-outline-secondary">Write Review</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -164,8 +308,7 @@
                                         <div>
                                             <i class="fas fa-check-circle text-success me-2"></i>
                                             <strong>Booking Confirmed</strong>
-                                            <p class="mb-0 small text-muted">Your booking #RENT-09876 has been
-                                                confirmed.</p>
+                                            <p class="mb-0 small text-muted">Your booking #RENT-09876 has been confirmed.</p>
                                         </div>
                                         <small class="text-muted">2 days ago</small>
                                     </a>
@@ -174,8 +317,7 @@
                                         <div>
                                             <i class="fas fa-tag text-primary me-2"></i>
                                             <strong>New Promo!</strong>
-                                            <p class="mb-0 small text-muted">Use code SAVE10 for 10% off your next
-                                                rental.</p>
+                                            <p class="mb-0 small text-muted">Use code SAVE10 for 10% off your next rental.</p>
                                         </div>
                                         <small class="text-muted">1 week ago</small>
                                     </a>
@@ -187,4 +329,5 @@
             </div>
         </main>
 
+        <script src="${pageContext.request.contextPath}/assets/js/validation.js"></script>
         <%@ include file="components/footer.jsp" %>

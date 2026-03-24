@@ -14,7 +14,7 @@
                             <h5 class="fw-bold mb-0"><i class="fas fa-paper-plane text-primary me-2"></i>Send Notification</h5>
                         </div>
                         <div class="card-body p-4">
-                            <form>
+                            <form id="sendNotificationForm">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Target Audience</label>
                                     <select class="form-select">
@@ -25,15 +25,15 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Notification Title</label>
-                                    <input type="text" class="form-control" placeholder="e.g. Flash Sale Alert!">
+                                    <input type="text" class="form-control" name="notifTitle" placeholder="e.g. Flash Sale Alert!" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Message</label>
-                                    <textarea class="form-control" rows="4"
-                                        placeholder="Type your message here..."></textarea>
+                                    <textarea class="form-control" rows="4" name="notifMessage"
+                                        placeholder="Type your message here..." required></textarea>
                                 </div>
                                 <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-primary px-4"><i
+                                    <button type="submit" class="btn btn-primary px-4"><i
                                             class="fas fa-paper-plane me-2"></i>Send Notification</button>
                                 </div>
                             </form>

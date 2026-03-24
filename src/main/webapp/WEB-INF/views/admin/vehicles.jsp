@@ -109,15 +109,15 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form id="addVehicleForm">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Brand</label>
-                                    <input type="text" class="form-control" placeholder="e.g. Toyota">
+                                    <input type="text" class="form-control" name="brand" placeholder="e.g. Toyota" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Model</label>
-                                    <input type="text" class="form-control" placeholder="e.g. Corolla 2024">
+                                    <input type="text" class="form-control" name="model" placeholder="e.g. Corolla 2024" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Type</label>
@@ -145,11 +145,11 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Price Per Day (Rs.)</label>
-                                    <input type="number" class="form-control" placeholder="5000">
+                                    <input type="number" class="form-control" name="price" placeholder="5000" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Passengers</label>
-                                    <input type="number" class="form-control" placeholder="5">
+                                    <input type="number" class="form-control" name="passengers" placeholder="5" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Color</label>
@@ -161,7 +161,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Register Number</label>
-                                    <input type="text" class="form-control" placeholder="e.g. GJ-01-AB-1234">
+                                    <input type="text" class="form-control" name="regNumber" placeholder="e.g. GJ-01-AB-1234" required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Description</label>
@@ -172,7 +172,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save Vehicle</button>
+                        <button type="submit" class="btn btn-primary">Save Vehicle</button>
                     </div>
                 </div>
             </div>
@@ -241,15 +241,15 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form id="editVehicleForm">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Brand</label>
-                                    <input type="text" class="form-control" value="Toyota">
+                                    <input type="text" class="form-control" name="brand" value="Toyota" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Model</label>
-                                    <input type="text" class="form-control" value="Corolla 2024">
+                                    <input type="text" class="form-control" name="model" value="Corolla 2024" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Type</label>
@@ -277,7 +277,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Price Per Day (Rs.)</label>
-                                    <input type="number" class="form-control" value="5000">
+                                    <input type="number" class="form-control" name="price" value="5000" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Passengers</label>
@@ -308,7 +308,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary">Update Vehicle</button>
+                        <button type="submit" class="btn btn-primary">Update Vehicle</button>
                     </div>
                 </div>
             </div>

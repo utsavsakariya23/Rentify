@@ -3,7 +3,7 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <h5 class="text-dark mb-3">Easy Rental</h5>
+                    <h5 class="text-dark mb-3">RENTIFY</h5>
                     <p class="text-dark">Experience the freedom of the road with our premium fleet. Reliable,
                         affordable, and always ready for your next adventure.</p>
                     <div class="d-flex gap-3">
@@ -44,7 +44,7 @@
             <hr class="my-4 border-white-50">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0 text-white-50">&copy; 2026 Easy Rental. All rights reserved.</p>
+                    <p class="mb-0 text-white-50">&copy; 2026 RENTIFY. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <img src="${pageContext.request.contextPath}/assets/img/payment_methods.png" alt="Payments"
@@ -58,6 +58,7 @@
     <script src="${pageContext.request.contextPath}/assets/bootstrap/js/jquery-3.6.1.min.js"></script>
     <script src="${pageContext.request.contextPath}/assets/bootstrap/js/bootstrap.bundle.js"></script>
     <script src="${pageContext.request.contextPath}/assets/controller/main.js"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/validation.js"></script>
     <script src="${pageContext.request.contextPath}/assets/controller/url.js"></script>
     <script>
         // Auth State Management
