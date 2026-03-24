@@ -177,8 +177,15 @@ public class PageController extends HttpServlet {
         String password = request.getParameter("password");
         String rememberMe = request.getParameter("rememberMe");
 
+        boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+
         if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/login?error=true");
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\": false, \"message\": \"Username/Email and Password are required.\"}");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/login?error=true");
+            }
             return;
         }
 
@@ -203,13 +210,20 @@ public class PageController extends HttpServlet {
                 response.addCookie(cookie);
             }
 
-            if ("Admin".equalsIgnoreCase(user.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            String targetUrl = "Admin".equalsIgnoreCase(user.getRole()) ? "/admin/dashboard" : "/home";
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\": true, \"redirectUrl\": \"" + request.getContextPath() + targetUrl + "\"}");
             } else {
-                response.sendRedirect(request.getContextPath() + "/home");
+                response.sendRedirect(request.getContextPath() + targetUrl);
             }
         } else {
-            response.sendRedirect(request.getContextPath() + "/login?error=true");
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\": false, \"message\": \"Invalid username or password.\"}");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/login?error=true");
+            }
         }
     }
 

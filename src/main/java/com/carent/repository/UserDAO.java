@@ -14,15 +14,16 @@ import java.util.List;
 public class UserDAO {
 
     /**
-     * Authenticate a user by username and hashed password.
-     * Fetches user by username, then verifies the password hash.
+     * Authenticate a user by username OR email, and hashed password.
+     * Fetches user by username or email, then verifies the password hash.
      */
-    public User getUserByUsernameAndPassword(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ?";
+    public User getUserByUsernameAndPassword(String identifier, String password) {
+        String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, username);
+            ps.setString(1, identifier);
+            ps.setString(2, identifier);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

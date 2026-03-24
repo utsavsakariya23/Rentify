@@ -55,7 +55,8 @@
     function isEmpty(val) { return !val || val.trim().length === 0; }
     function minLen(val, n) { return val.trim().length >= n; }
     function isValidEmail(val) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()); }
-    function isValidPhone(val) { return /^[0-9+\-\s()]{7,15}$/.test(val.trim()); }
+    function isValidPhone(val) { return /^[0-9]{10}$/.test(val.trim()); }
+    function isStrongPassword(val) { return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/.test(val); }
 
     function getVal(form, name) {
         var el = form.querySelector('[name="' + name + '"]');
@@ -83,7 +84,7 @@
 
         f = getEl(form, 'phone');
         if (f && isEmpty(f.value)) { showError(f, 'Phone number is required.'); valid = false; }
-        else if (f && !isValidPhone(f.value)) { showError(f, 'Please enter a valid phone number (7-15 digits).'); valid = false; }
+        else if (f && !isValidPhone(f.value)) { showError(f, 'Phone number must be exactly 10 digits.'); valid = false; }
 
         f = getEl(form, 'username');
         if (f && isEmpty(f.value)) { showError(f, 'Username is required.'); valid = false; }
@@ -92,7 +93,7 @@
 
         f = getEl(form, 'password');
         if (f && isEmpty(f.value)) { showError(f, 'Password is required.'); valid = false; }
-        else if (f && !minLen(f.value, 4)) { showError(f, 'Password must be at least 4 characters.'); valid = false; }
+        else if (f && !isStrongPassword(f.value)) { showError(f, 'Password must be min 8 chars with 1 uppercase, 1 number, and 1 special char.'); valid = false; }
 
         var cp = getEl(form, 'confirmPassword');
         if (cp && isEmpty(cp.value)) { showError(cp, 'Please confirm your password.'); valid = false; }
@@ -213,7 +214,7 @@
 
         f = getEl(form, 'newPassword');
         if (f && isEmpty(f.value)) { showError(f, 'New password is required.'); valid = false; }
-        else if (f && !minLen(f.value, 4)) { showError(f, 'New password must be at least 4 characters.'); valid = false; }
+        else if (f && !isStrongPassword(f.value)) { showError(f, 'New password must be min 8 chars with 1 uppercase, 1 number, and 1 special char.'); valid = false; }
 
         var cp = getEl(form, 'confirmNewPassword');
         if (cp && isEmpty(cp.value)) { showError(cp, 'Please confirm new password.'); valid = false; }
@@ -252,7 +253,34 @@
 
     // ── Auto-Attach Setup ───────────────────────────────────
 
-    function attachValidation(formId, validatorFn) {
+    function doAjaxLogin(form) {
+        var formData = new FormData(form);
+        var params = new URLSearchParams(formData);
+        var basePath = window.location.pathname.substring(0, window.location.pathname.indexOf('/', 1));
+        if (basePath === '') basePath = '/carent';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', basePath + '/perform_login', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var res = JSON.parse(xhr.responseText);
+                    if (res.success) {
+                        window.location.href = res.redirectUrl;
+                    } else {
+                        var passEl = getEl(form, 'password');
+                        showError(passEl, res.message || 'Invalid credentials.');
+                    }
+                } catch(e) {}
+            }
+        };
+        xhr.send(params.toString());
+    }
+
+    function attachValidation(formId, validatorFn, isAjaxPost) {
         var form = document.getElementById(formId);
         if (form) {
             form.setAttribute('novalidate', 'true');
@@ -261,6 +289,9 @@
                     e.preventDefault();
                     e.stopPropagation();
                     focusFirst(form);
+                } else if (isAjaxPost) {
+                    e.preventDefault();
+                    doAjaxLogin(form);
                 }
             });
         }
@@ -268,8 +299,13 @@
 
     // ── Real-time AJAX Validation ───────────────────────────
 
+    var debounceTimer;
     function checkUnique(inputEl, fieldName, errorMsg) {
-        if (!inputEl || isEmpty(inputEl.value)) return;
+        if (!inputEl || isEmpty(inputEl.value)) {
+            clearError(inputEl);
+            inputEl.removeAttribute('data-invalid-unique');
+            return;
+        }
         var val = inputEl.value.trim();
         
         // Skip DB check if client-side validation is obviously failing
@@ -280,25 +316,28 @@
         var basePath = window.location.pathname.substring(0, window.location.pathname.indexOf('/', 1));
         if (basePath === '') basePath = '/carent'; // fallback
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', basePath + '/validate_unique?field=' + fieldName + '&value=' + encodeURIComponent(val), true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    var res = JSON.parse(xhr.responseText);
-                    if (res.taken) {
-                        showError(inputEl, errorMsg);
-                        inputEl.setAttribute('data-invalid-unique', 'true');
-                    } else {
-                        inputEl.removeAttribute('data-invalid-unique');
-                        if (inputEl.classList.contains('is-invalid')) {
-                            clearError(inputEl);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', basePath + '/validate_unique?field=' + fieldName + '&value=' + encodeURIComponent(val), true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var res = JSON.parse(xhr.responseText);
+                        if (res.taken) {
+                            showError(inputEl, errorMsg);
+                            inputEl.setAttribute('data-invalid-unique', 'true');
+                        } else {
+                            inputEl.removeAttribute('data-invalid-unique');
+                            if (inputEl.classList.contains('is-invalid')) {
+                                clearError(inputEl);
+                            }
                         }
-                    }
-                } catch(e) {}
-            }
-        };
-        xhr.send();
+                    } catch(e) {}
+                }
+            };
+            xhr.send();
+        }, 500); // 500ms debounce
     }
 
     function setupRealtimeValidation() {
@@ -307,22 +346,45 @@
 
         var userEl = getEl(form, 'username');
         if (userEl) {
-            userEl.addEventListener('blur', function() {
+            userEl.addEventListener('input', function() {
                 checkUnique(userEl, 'username', 'This username is already taken. Please choose another.');
             });
         }
 
         var emailEl = getEl(form, 'email');
         if (emailEl) {
-            emailEl.addEventListener('blur', function() {
+            emailEl.addEventListener('input', function() {
                 checkUnique(emailEl, 'email', 'This email is already registered. Try logging in.');
             });
         }
 
         var licEl = getEl(form, 'licenseNo');
         if (licEl) {
-            licEl.addEventListener('blur', function() {
+            licEl.addEventListener('input', function() {
                 checkUnique(licEl, 'licenseNo', 'This license number is already registered.');
+            });
+        }
+        
+        // Also provide instant feedback for password and phone
+        var passEl = getEl(form, 'password');
+        if (passEl) {
+            passEl.addEventListener('input', function() {
+                if (!isEmpty(passEl.value) && !isStrongPassword(passEl.value)) {
+                    showError(passEl, 'Min 8 chars, 1 uppercase, 1 number, 1 special char.');
+                } else if (!isEmpty(passEl.value)) {
+                    clearError(passEl);
+                }
+            });
+        }
+
+        var phoneEl = getEl(form, 'phone');
+        if (phoneEl) {
+            phoneEl.addEventListener('input', function() {
+                if (!isEmpty(phoneEl.value) && !isValidPhone(phoneEl.value)) {
+                    showError(phoneEl, 'Must be exactly 10 digits.');
+                } else if (!isEmpty(phoneEl.value)) {
+                    clearError(phoneEl);
+                }
             });
         }
     }
@@ -333,7 +395,7 @@
 
         // User forms
         attachValidation('registerForm', validateRegister);
-        attachValidation('loginForm', validateLogin);
+        attachValidation('loginForm', validateLogin, true); // true = Use AJAX POST
 
         // Setup real-time AJAX unique validations
         setupRealtimeValidation();
