@@ -151,7 +151,7 @@
                                 <div>
                                     <button type="button" class="btn btn-secondary me-2"
                                         data-bs-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-primary"><i
+                                    <button type="submit" form="replyForm1" class="btn btn-primary"><i
                                             class="fas fa-paper-plane me-1"></i> Send Reply</button>
                                 </div>
                             </div>

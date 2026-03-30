@@ -76,9 +76,13 @@
         </ul>
     </nav>
 
-    <!-- Logout -->
-    <div class="sidebar-footer">
-        <a href="${pageContext.request.contextPath}/home" class="btn-logout">
+    <!-- Footer Navigation -->
+    <div class="sidebar-footer d-flex flex-column gap-2">
+        <a href="${pageContext.request.contextPath}/home" class="btn-logout" style="background: rgba(255, 255, 255, 0.1); color: inherit;">
+            <i class="fas fa-globe"></i>
+            <span>Back to Website</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/logout" class="btn-logout">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
         </a>

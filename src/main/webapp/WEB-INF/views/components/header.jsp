@@ -48,6 +48,13 @@
                             <c:choose>
                                 <c:when test="${not empty sessionScope.user}">
                                     <%-- User is Logged In --%>
+                                        <c:if test="${sessionScope.role == 'Admin'}">
+                                            <li class="nav-item">
+                                                <a class="nav-link text-info fw-bold" href="${pageContext.request.contextPath}/admin/dashboard">
+                                                    <i class="fas fa-hammer me-1"></i> DASHBOARD
+                                                </a>
+                                            </li>
+                                        </c:if>
                                         <li class="nav-item">
                                             <a class="nav-link" href="${pageContext.request.contextPath}/profile">
                                                 <i class="fas fa-user-circle me-1"></i> PROFILE

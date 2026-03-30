@@ -14,7 +14,14 @@
                             <h5 class="fw-bold mb-0">
                                 <%= session.getAttribute("loggedUser") != null ? ((com.carent.model.User)session.getAttribute("loggedUser")).getFullName() : "Guest" %>
                             </h5>
-                            <small class="text-muted">Member since 2024</small>
+                            <c:choose>
+                                <c:when test="${sessionScope.role == 'Admin'}">
+                                    <span class="badge bg-info text-dark mt-1"><i class="fas fa-hammer me-1"></i> Administrator</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <small class="text-muted">Member since 2024</small>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
 
                         <div class="list-group list-group-flush">

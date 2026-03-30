@@ -31,6 +31,20 @@ public class PageController extends HttpServlet {
             action = action.substring(0, action.length() - 1);
         }
 
+        // Protect Admin Routes
+        if (action.startsWith("/admin")) {
+            HttpSession sess = request.getSession(false);
+            if (sess == null || sess.getAttribute("loggedUser") == null) {
+                response.sendRedirect(request.getContextPath() + "/login?error=true");
+                return;
+            }
+            User u = (User) sess.getAttribute("loggedUser");
+            if (!"Admin".equalsIgnoreCase(u.getRole())) {
+                response.sendRedirect(request.getContextPath() + "/home");
+                return;
+            }
+        }
+
         // Handle root path
         if (action.equals("") || action.equals("/")) {
             request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
