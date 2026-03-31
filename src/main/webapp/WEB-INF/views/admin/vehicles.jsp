@@ -1,329 +1,177 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
     <%@ include file="components/adminHeader.jsp" %>
 
-        <main class="container-fluid">
+        <main class="container-fluid my-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold">Manage Vehicles</h2>
-                <div class="d-flex gap-2">
-                    <div class="input-group" style="width: 280px;">
-                        <input type="text" class="form-control" id="vehicleSearch" placeholder="Search vehicles..."
-                            onkeyup="searchTable('vehicleSearch', 'vehicleTableBody')">
-                        <button class="btn btn-outline-secondary"><i class="fas fa-search"></i></button>
-                    </div>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
-                        <i class="fas fa-plus me-2"></i>Add New Vehicle
-                    </button>
-                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCarModal">
+                    <i class="fas fa-plus me-2"></i>Add Vehicle
+                </button>
             </div>
 
-            <!-- Vehicles Table -->
-            <div class="card card-modern border-0">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
+            <c:if test="${not empty param.success}">
+                <div class="alert alert-success alert-dismissible fade show">${param.success}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+
+            <div class="card card-modern border-0 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Brand</th>
+                                <th>Price/Day</th>
+                                <th>Fuel</th>
+                                <th>Transmission</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="car" items="${cars}">
                                 <tr>
-                                    <th>Image</th>
-                                    <th>Model</th>
-                                    <th>Brand</th>
-                                    <th>Price/Day</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vehicleTableBody">
-                                <tr>
-                                    <td><img src="${pageContext.request.contextPath}/assets/img/toyota_corolla.webp"
-                                            width="60" class="rounded"></td>
-                                    <td>Corolla 2024</td>
-                                    <td>Toyota</td>
-                                    <td>Rs. 5,000</td>
-                                    <td>Sedan</td>
-                                    <td><span class="badge bg-success">Available</span></td>
+                                    <td>${car.carId}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-info me-1" title="View" data-bs-toggle="modal"
-                                            data-bs-target="#viewVehicleModal"><i class="fas fa-eye"></i></button>
-                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit" data-bs-toggle="modal"
-                                            data-bs-target="#editVehicleModal"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i
-                                                class="fas fa-trash"></i></button>
+                                        <c:choose>
+                                            <c:when test="${not empty car.imageUrl}">
+                                                <img src="${car.imageUrl}" alt="${car.name}" class="rounded" style="width:60px;height:40px;object-fit:cover;">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="rounded d-flex align-items-center justify-content-center" style="width:60px;height:40px;background:#e9ecef;">
+                                                    <i class="fas fa-car text-muted"></i>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td class="fw-bold">${car.name}</td>
+                                    <td>${car.brand}</td>
+                                    <td>Rs. <fmt:formatNumber value="${car.pricePerDay}" pattern="#,##0" /></td>
+                                    <td>${car.fuelType}</td>
+                                    <td>${car.transmission}</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${car.status == 'Available'}"><span class="badge bg-success">Available</span></c:when>
+                                            <c:when test="${car.status == 'Booked'}"><span class="badge bg-warning text-dark">Booked</span></c:when>
+                                            <c:when test="${car.status == 'Service'}"><span class="badge bg-danger">Service</span></c:when>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCarModal${car.carId}"><i class="fas fa-edit"></i></button>
+                                        <form action="${pageContext.request.contextPath}/admin/delete_car" method="post" style="display:inline;" onsubmit="return confirm('Delete this car?');">
+                                            <input type="hidden" name="carId" value="${car.carId}">
+                                            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                        </form>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td><img src="${pageContext.request.contextPath}/assets/img/honda_civic.webp"
-                                            width="60" class="rounded"></td>
-                                    <td>Civic 2024</td>
-                                    <td>Honda</td>
-                                    <td>Rs. 6,500</td>
-                                    <td>Sedan</td>
-                                    <td><span class="badge bg-warning text-dark">Rented</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info me-1" title="View"><i
-                                                class="fas fa-eye"></i></button>
-                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i
-                                                class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><img src="${pageContext.request.contextPath}/assets/img/nissan_x_trail.webp"
-                                            width="60" class="rounded"></td>
-                                    <td>X-Trail 2024</td>
-                                    <td>Nissan</td>
-                                    <td>Rs. 8,000</td>
-                                    <td>SUV</td>
-                                    <td><span class="badge bg-success">Available</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info me-1" title="View"><i
-                                                class="fas fa-eye"></i></button>
-                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i
-                                                class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Pagination -->
-                    <nav class="mt-4">
+
+
+                            </c:forEach>
+                            <c:if test="${empty cars}">
+                                <tr><td colspan="9" class="text-center text-muted py-4">No vehicles found</td></tr>
+                            </c:if>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <!-- Pagination -->
+                <c:if test="${totalPages > 1}">
+                    <nav class="mt-3">
                         <ul class="pagination justify-content-center">
-                            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                            <c:forEach begin="1" end="${totalPages}" var="i">
+                                <li class="page-item ${currentPage == i ? 'active' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/admin/vehicles?page=${i}">${i}</a>
+                                </li>
+                            </c:forEach>
                         </ul>
                     </nav>
-                </div>
+                </c:if>
             </div>
         </main>
 
-        <!-- ===== ADD VEHICLE MODAL ===== -->
-        <div class="modal fade" id="addVehicleModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add New Vehicle</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addVehicleForm">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Brand</label>
-                                    <input type="text" class="form-control" name="brand" placeholder="e.g. Toyota" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Model</label>
-                                    <input type="text" class="form-control" name="model" placeholder="e.g. Corolla 2024" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Type</label>
-                                    <select class="form-select">
-                                        <option>Sedan</option>
-                                        <option>SUV</option>
-                                        <option>Hatchback</option>
-                                        <option>Luxury</option>
+        <!-- Edit Modals (outside main container to prevent z-index/Bootstrap rendering bugs) -->
+        <c:forEach var="car" items="${cars}">
+            <div class="modal fade" id="editCarModal${car.carId}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title">Edit Vehicle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <form action="${pageContext.request.contextPath}/admin/edit_car" method="post">
+                            <div class="modal-body">
+                                <input type="hidden" name="carId" value="${car.carId}">
+                                <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" name="name" value="${car.name}" required></div>
+                                <div class="mb-3"><label class="form-label">Brand</label><input type="text" class="form-control" name="brand" value="${car.brand}" required></div>
+                                <div class="mb-3"><label class="form-label">Price/Day</label><input type="number" class="form-control" name="pricePerDay" value="${car.pricePerDay}" step="0.01" required></div>
+                                <div class="mb-3"><label class="form-label">Fuel Type</label>
+                                    <select class="form-select" name="fuelType">
+                                        <option value="Petrol" ${car.fuelType == 'Petrol' ? 'selected' : ''}>Petrol</option>
+                                        <option value="Diesel" ${car.fuelType == 'Diesel' ? 'selected' : ''}>Diesel</option>
+                                        <option value="Electric" ${car.fuelType == 'Electric' ? 'selected' : ''}>Electric</option>
+                                        <option value="Hybrid" ${car.fuelType == 'Hybrid' ? 'selected' : ''}>Hybrid</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Transmission</label>
-                                    <select class="form-select">
-                                        <option>Auto</option>
-                                        <option>Manual</option>
+                                <div class="mb-3"><label class="form-label">Transmission</label>
+                                    <select class="form-select" name="transmission">
+                                        <option value="Automatic" ${car.transmission == 'Automatic' ? 'selected' : ''}>Automatic</option>
+                                        <option value="Manual" ${car.transmission == 'Manual' ? 'selected' : ''}>Manual</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Fuel</label>
-                                    <select class="form-select">
-                                        <option>Petrol</option>
-                                        <option>Diesel</option>
-                                        <option>Electric</option>
+                                <div class="mb-3"><label class="form-label">Status</label>
+                                    <select class="form-select" name="status">
+                                        <option value="Available" ${car.status == 'Available' ? 'selected' : ''}>Available</option>
+                                        <option value="Booked" ${car.status == 'Booked' ? 'selected' : ''}>Booked</option>
+                                        <option value="Service" ${car.status == 'Service' ? 'selected' : ''}>Service</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Price Per Day (Rs.)</label>
-                                    <input type="number" class="form-control" name="price" placeholder="5000" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Passengers</label>
-                                    <input type="number" class="form-control" name="passengers" placeholder="5" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Color</label>
-                                    <input type="text" class="form-control" placeholder="e.g. White">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Image</label>
-                                    <input type="file" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Register Number</label>
-                                    <input type="text" class="form-control" name="regNumber" placeholder="e.g. GJ-01-AB-1234" required>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Description</label>
-                                    <textarea class="form-control" rows="3" placeholder="Vehicle description..."></textarea>
-                                </div>
+                                <div class="mb-3"><label class="form-label">Image URL</label><input type="text" class="form-control" name="imageUrl" value="${car.imageUrl}"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" form="addVehicleForm" class="btn btn-primary">Save Vehicle</button>
-                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- ===== VIEW VEHICLE MODAL ===== -->
-        <div class="modal fade" id="viewVehicleModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Vehicle Details</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-5 text-center">
-                                <img src="${pageContext.request.contextPath}/assets/img/toyota_corolla.webp"
-                                    class="img-fluid rounded shadow-sm mb-3" alt="Vehicle">
-                                <span class="badge bg-success fs-6">Available</span>
+        </c:forEach>
+            <div class="modal fade" id="addCarModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title">Add New Vehicle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <form action="${pageContext.request.contextPath}/admin/add_car" method="post">
+                            <div class="modal-body">
+                                <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" name="name" placeholder="e.g. Toyota Corolla" required></div>
+                                <div class="mb-3"><label class="form-label">Brand</label><input type="text" class="form-control" name="brand" placeholder="e.g. Toyota" required></div>
+                                <div class="mb-3"><label class="form-label">Price/Day (Rs.)</label><input type="number" class="form-control" name="pricePerDay" step="0.01" required></div>
+                                <div class="mb-3"><label class="form-label">Fuel Type</label>
+                                    <select class="form-select" name="fuelType">
+                                        <option value="Petrol">Petrol</option>
+                                        <option value="Diesel">Diesel</option>
+                                        <option value="Electric">Electric</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3"><label class="form-label">Transmission</label>
+                                    <select class="form-select" name="transmission">
+                                        <option value="Automatic">Automatic</option>
+                                        <option value="Manual">Manual</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3"><label class="form-label">Image URL</label><input type="text" class="form-control" name="imageUrl" placeholder="https://..."></div>
                             </div>
-                            <div class="col-md-7">
-                                <h4 class="fw-bold">Toyota Corolla 2024</h4>
-                                <hr>
-                                <div class="row g-3">
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">BRAND</p>
-                                        <p class="fw-bold">Toyota</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">TYPE</p>
-                                        <p class="fw-bold">Sedan</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">TRANSMISSION</p>
-                                        <p class="fw-bold">Auto</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">FUEL</p>
-                                        <p class="fw-bold">Petrol</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">PRICE / DAY</p>
-                                        <p class="fw-bold text-primary">Rs. 5,000</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">PASSENGERS</p>
-                                        <p class="fw-bold">5</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== EDIT VEHICLE MODAL ===== -->
-        <div class="modal fade" id="editVehicleModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Vehicle</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editVehicleForm">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Brand</label>
-                                    <input type="text" class="form-control" name="brand" value="Toyota" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Model</label>
-                                    <input type="text" class="form-control" name="model" value="Corolla 2024" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Type</label>
-                                    <select class="form-select">
-                                        <option selected>Sedan</option>
-                                        <option>SUV</option>
-                                        <option>Hatchback</option>
-                                        <option>Luxury</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Transmission</label>
-                                    <select class="form-select">
-                                        <option selected>Auto</option>
-                                        <option>Manual</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Fuel</label>
-                                    <select class="form-select">
-                                        <option selected>Petrol</option>
-                                        <option>Diesel</option>
-                                        <option>Electric</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Price Per Day (Rs.)</label>
-                                    <input type="number" class="form-control" name="price" value="5000" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Passengers</label>
-                                    <input type="number" class="form-control" value="5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Status</label>
-                                    <select class="form-select">
-                                        <option selected>Available</option>
-                                        <option>Rented</option>
-                                        <option>Maintenance</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Change Image</label>
-                                    <input type="file" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Register Number</label>
-                                    <input type="text" class="form-control" value="GJ-01-AB-1234">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Description</label>
-                                    <textarea class="form-control" rows="3">Well maintained sedan with smooth driving experience.</textarea>
-                                </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add Vehicle</button>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" form="editVehicleForm" class="btn btn-primary">Update Vehicle</button>
-                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Search Script -->
-        <script>
-        function searchTable(inputId, tbodyId) {
-            var filter = document.getElementById(inputId).value.toUpperCase();
-            var rows = document.getElementById(tbodyId).getElementsByTagName('tr');
-            for (var i = 0; i < rows.length; i++) {
-                var text = rows[i].textContent || rows[i].innerText;
-                rows[i].style.display = text.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
-            }
-        }
-        </script>
+            </div>
 
         <%@ include file="components/adminFooter.jsp" %>

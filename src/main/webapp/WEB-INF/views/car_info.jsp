@@ -1,257 +1,110 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
     <%@ include file="components/header.jsp" %>
 
         <main class="container my-5 pt-5">
-            <div class="row g-5">
-                <!-- Left Column: Gallery & Details -->
-                <div class="col-lg-8">
-                    <!-- Gallery -->
-                    <div class="card card-modern mb-4">
-                        <img src="${pageContext.request.contextPath}/assets/img/toyota_corolla.webp"
-                            class="img-fluid rounded-top" id="mainImage" alt="Car Main">
-                        <div class="d-flex gap-2 p-3">
-                            <img src="${pageContext.request.contextPath}/assets/img/toyota_corolla.webp"
-                                class="img-thumbnail" style="width: 100px; cursor: pointer;"
-                                onclick="changeImage(this)">
-                            <img src="${pageContext.request.contextPath}/assets/img/repair-tool.png"
-                                class="img-thumbnail" style="width: 100px; cursor: pointer;"
-                                onclick="changeImage(this)"> <!-- Placeholder -->
-                            <img src="${pageContext.request.contextPath}/assets/img/interest-rate.png"
-                                class="img-thumbnail" style="width: 100px; cursor: pointer;"
-                                onclick="changeImage(this)"> <!-- Placeholder -->
-                        </div>
-                    </div>
-
-                    <!-- Specs & Description -->
-                    <div class="card card-modern p-4 mb-4">
-                        <h3 class="fw-bold">Toyota Corolla (2025)</h3>
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="text-warning me-2">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
+            <c:choose>
+                <c:when test="${car != null}">
+                    <div class="row">
+                        <!-- Car Image -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card card-modern border-0 overflow-hidden">
+                                <c:choose>
+                                    <c:when test="${not empty car.imageUrl}">
+                                        <img src="${car.imageUrl}" alt="${car.name}" class="w-100" style="max-height:400px;object-fit:cover;">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="d-flex align-items-center justify-content-center" style="height:400px;background:#f0f0f0;">
+                                            <i class="fas fa-car fa-5x text-muted"></i>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
-                            <span class="text-muted">(120 Reviews)</span>
                         </div>
 
-                        <h5 class="fw-bold mt-3">Vehicle Overview</h5>
-                        <p class="text-muted">The Toyota Corolla is a compact car that offers a comfortable ride, good
-                            fuel economy, and a long list of standard safety features. Perfect for city driving and long
-                            highway trips alike.</p>
+                        <!-- Car Details -->
+                        <div class="col-lg-6 mb-4">
+                            <h2 class="fw-bold">${car.name}</h2>
+                            <p class="text-muted fs-5">${car.brand}</p>
 
-                        <h5 class="fw-bold mt-4">Specifications</h5>
-                        <div class="row g-3">
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <i class="fas fa-gas-pump text-primary mb-2"></i>
-                                    <div class="small fw-bold">Petrol</div>
-                                </div>
+                            <div class="mb-3">
+                                <c:forEach begin="1" end="5" var="star">
+                                    <i class="fas fa-star ${star <= car.averageRating ? 'text-warning' : 'text-muted'} fs-5"></i>
+                                </c:forEach>
+                                <span class="ms-2 text-muted">
+                                    <fmt:formatNumber value="${car.averageRating}" pattern="#.#" /> / 5
+                                    (${car.reviewCount} reviews)
+                                </span>
                             </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <i class="fas fa-cog text-primary mb-2"></i>
-                                    <div class="small fw-bold">Automatic</div>
-                                </div>
+
+                            <div class="mb-4">
+                                <span class="h3 fw-bold text-primary">Rs. <fmt:formatNumber value="${car.pricePerDay}" pattern="#,##0" /></span>
+                                <span class="text-muted">/day</span>
                             </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <i class="fas fa-users text-primary mb-2"></i>
-                                    <div class="small fw-bold">5 Seats</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <i class="fas fa-tachometer-alt text-primary mb-2"></i>
-                                    <div class="small fw-bold">15km/L</div>
-                                </div>
-                            </div>
+
+                            <table class="table table-borderless mb-4">
+                                <tr><td class="text-muted"><i class="fas fa-gas-pump me-2"></i>Fuel Type</td><td class="fw-bold">${car.fuelType}</td></tr>
+                                <tr><td class="text-muted"><i class="fas fa-cog me-2"></i>Transmission</td><td class="fw-bold">${car.transmission}</td></tr>
+                                <tr>
+                                    <td class="text-muted"><i class="fas fa-info-circle me-2"></i>Status</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${car.status == 'Available'}"><span class="badge bg-success">Available</span></c:when>
+                                            <c:when test="${car.status == 'Booked'}"><span class="badge bg-warning text-dark">Currently Booked</span></c:when>
+                                            <c:when test="${car.status == 'Service'}"><span class="badge bg-danger">Under Service</span></c:when>
+                                        </c:choose>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <c:if test="${car.status == 'Available'}">
+                                <a href="${pageContext.request.contextPath}/booking?carId=${car.carId}" class="btn btn-primary-custom btn-lg w-100 py-3 fw-bold">
+                                    <i class="fas fa-calendar-check me-2"></i>Book Now
+                                </a>
+                            </c:if>
+                            <c:if test="${car.status != 'Available'}">
+                                <button class="btn btn-secondary btn-lg w-100 py-3" disabled>
+                                    <i class="fas fa-ban me-2"></i>Not Available
+                                </button>
+                            </c:if>
                         </div>
                     </div>
 
                     <!-- Reviews Section -->
-                    <div class="card card-modern p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="fw-bold">Customer Reviews</h4>
-                            <button class="btn btn-outline-primary btn-sm">Write a Review</button>
-                        </div>
-
-                        <!-- Review 1 -->
-                        <div class="d-flex mb-4">
-                            <div class="flex-shrink-0">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width: 50px; height: 50px;">
-                                    JD
+                    <div class="row mt-5">
+                        <div class="col-12">
+                            <h4 class="fw-bold mb-4"><i class="fas fa-star text-warning me-2"></i>Customer Reviews (${car.reviewCount})</h4>
+                            <c:forEach var="r" items="${reviews}">
+                                <div class="card card-modern border-0 mb-3 p-3">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>${r.userName}</strong>
+                                            <div class="mt-1">
+                                                <c:forEach begin="1" end="5" var="star">
+                                                    <i class="fas fa-star ${star <= r.rating ? 'text-warning' : 'text-muted'} small"></i>
+                                                </c:forEach>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted"><fmt:formatDate value="${r.createdAt}" pattern="dd MMM yyyy" /></small>
+                                    </div>
+                                    <p class="mt-2 mb-0 text-muted">${r.comment}</p>
                                 </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <h6 class="fw-bold mb-1">John Doe <span class="text-muted small fw-normal">- 2 days
-                                        ago</span></h6>
-                                <div class="text-warning small mb-2">
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                        class="fas fa-star"></i><i class="fas fa-star"></i>
-                                </div>
-                                <p class="text-muted small">Car was in excellent condition. Smooth pickup process.</p>
-                            </div>
-                        </div>
-                        <hr>
-                        <!-- Review 2 -->
-                        <div class="d-flex mb-4">
-                            <div class="flex-shrink-0">
-                                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width: 50px; height: 50px;">
-                                    SM
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <h6 class="fw-bold mb-1">Sarah Miller <span class="text-muted small fw-normal">- 1 week
-                                        ago</span></h6>
-                                <div class="text-warning small mb-2">
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                        class="fas fa-star"></i><i class="far fa-star"></i>
-                                </div>
-                                <p class="text-muted small">Great car, but the GPS was a bit outdated.</p>
-                            </div>
+                            </c:forEach>
+                            <c:if test="${empty reviews}">
+                                <p class="text-muted">No reviews yet for this vehicle.</p>
+                            </c:if>
                         </div>
                     </div>
-                </div>
-
-                <!-- Right Column: Booking Form -->
-                <div class="col-lg-4">
-                    <div class="card card-modern p-4 sticky-top" style="top: 100px;">
-                        <h4 class="fw-bold mb-0">Rs. 5,000 <span class="fs-6 text-muted fw-normal">/ day</span></h4>
-                        <hr>
-
-                        <form id="bookingForm">
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">PICK-UP DATE</label>
-                                <input type="date" class="form-control" id="pickupDate" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">DROP-OFF DATE</label>
-                                <input type="date" class="form-control" id="dropoffDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">COUPON CODE</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="couponCode" placeholder="Enter code">
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        onclick="applyCoupon()">Apply</button>
-                                </div>
-                                <small class="text-success" id="couponMsg" style="display: none;">Coupon applied! 10%
-                                    Off</small>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label small fw-bold">PAYMENT METHOD</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="paymentMethod" id="payOnline"
-                                        autocomplete="off" checked>
-                                    <label class="btn btn-outline-primary" for="payOnline"><i
-                                            class="fas fa-credit-card me-2"></i>Online</label>
-
-                                    <input type="radio" class="btn-check" name="paymentMethod" id="payCash"
-                                        autocomplete="off">
-                                    <label class="btn btn-outline-primary" for="payCash"><i
-                                            class="fas fa-money-bill-wave me-2"></i>Cash</label>
-                                </div>
-                            </div>
-
-
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Rental Fee</span>
-                                <span id="rentalFee">Rs. 0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Discount</span>
-                                <span class="text-success" id="discountAmt">- Rs. 0</span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between mb-4">
-                                <h5 class="fw-bold">Total</h5>
-                                <h5 class="fw-bold text-primary" id="totalAmt">Rs. 0</h5>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary-custom w-100 btn-lg">Book Now</button>
-                            <p class="text-center small text-muted mt-3"><i class="fas fa-lock me-1"></i> Secure
-                                Transaction</p>
-                        </form>
+                </c:when>
+                <c:otherwise>
+                    <div class="text-center py-5">
+                        <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Car not found.</h5>
+                        <a href="${pageContext.request.contextPath}/vehicles" class="btn btn-primary-custom">Browse Cars</a>
                     </div>
-                </div>
-            </div>
+                </c:otherwise>
+            </c:choose>
         </main>
 
-        <script>
-            function changeImage(el) {
-                document.getElementById('mainImage').src = el.src;
-            }
-
-            // Toggle Payment Fields
-            const payOnline = document.getElementById('payOnline');
-            const payCash = document.getElementById('payCash');
-            const onlineFields = document.getElementById('onlinePaymentFields');
-
-            function togglePayment() {
-                if (payOnline.checked) {
-                    onlineFields.style.display = 'block';
-                } else {
-                    onlineFields.style.display = 'none';
-                }
-            }
-
-            payOnline.addEventListener('change', togglePayment);
-            payCash.addEventListener('change', togglePayment);
-
-            // Coupon Logic
-            function applyCoupon() {
-                const code = document.getElementById('couponCode').value;
-                const msg = document.getElementById('couponMsg');
-                if (code === 'SAVE10') {
-                    msg.style.display = 'block';
-                    calculateTotal();
-                } else {
-                    alert('Invalid Coupon (Try SAVE10)');
-                    msg.style.display = 'none';
-                }
-            }
-
-            // Price Calc
-            const dailyRate = 5000;
-            const pickup = document.getElementById('pickupDate');
-            const dropoff = document.getElementById('dropoffDate');
-
-            function calculateTotal() {
-                if (pickup.value && dropoff.value) {
-                    const start = new Date(pickup.value);
-                    const end = new Date(dropoff.value);
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (diffDays > 0) {
-                        const fee = diffDays * dailyRate;
-                        document.getElementById('rentalFee').innerText = 'Rs. ' + fee;
-
-                        let discount = 0;
-                        if (document.getElementById('couponMsg').style.display === 'block') {
-                            discount = fee * 0.10;
-                        }
-                        document.getElementById('discountAmt').innerText = '- Rs. ' + discount;
-                        document.getElementById('totalAmt').innerText = 'Rs. ' + (fee - discount);
-                    }
-                }
-            }
-
-            pickup.addEventListener('change', calculateTotal);
-            dropoff.addEventListener('change', calculateTotal);
-
-            // Form Submit
-            document.getElementById('bookingForm').addEventListener('submit', function (e) {
-                e.preventDefault();
-                alert('Booking Request Sent Successfully!');
-                // Here you would add the AJAX call to save the booking
-            });
-        </script>
-
-        <%@ include file="components/footer.jsp" %>
+    <%@ include file="components/footer.jsp" %>

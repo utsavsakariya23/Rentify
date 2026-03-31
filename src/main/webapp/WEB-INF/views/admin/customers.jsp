@@ -1,196 +1,113 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
     <%@ include file="components/adminHeader.jsp" %>
 
-        <main class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold">Customer Management</h2>
-                <div class="input-group" style="width: 280px;">
-                    <input type="text" class="form-control" id="customerSearch" placeholder="Search customer..."
-                        onkeyup="searchTable('customerSearch', 'customerTableBody')">
-                    <button class="btn btn-outline-secondary"><i class="fas fa-search"></i></button>
+        <main class="container-fluid my-5">
+            <h2 class="fw-bold mb-4">Manage Customers</h2>
+            <div class="card card-modern border-0 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Username</th><th>License</th><th>Role</th><th>Verified</th><th>Joined</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="u" items="${users}">
+                                <tr>
+                                    <td>${u.userId}</td>
+                                    <td class="fw-bold">${u.fullName}</td>
+                                    <td>${u.email}</td>
+                                    <td>${u.phone}</td>
+                                    <td>${u.username}</td>
+                                    <td>${u.licenseNo}</td>
+                                    <td><span class="badge ${u.role == 'Admin' ? 'bg-danger' : 'bg-primary'}">${u.role}</span></td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${u.verified}"><span class="badge bg-success">Verified</span></c:when>
+                                            <c:otherwise><span class="badge bg-secondary">Unverified</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td><fmt:formatDate value="${u.createdAt}" pattern="dd MMM yyyy" /></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewCustomerModal${u.userId}" title="View Details"><i class="fas fa-eye"></i></button>
+                                        <c:if test="${u.role != 'Admin'}">
+                                            <c:choose>
+                                                <c:when test="${!u.verified}">
+                                                    <form action="${pageContext.request.contextPath}/admin/verify_user" method="post" style="display:inline;">
+                                                        <input type="hidden" name="userId" value="${u.userId}"><input type="hidden" name="action" value="verify">
+                                                        <button class="btn btn-sm btn-success" title="Verify"><i class="fas fa-check"></i></button>
+                                                    </form>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <form action="${pageContext.request.contextPath}/admin/verify_user" method="post" style="display:inline;">
+                                                        <input type="hidden" name="userId" value="${u.userId}"><input type="hidden" name="action" value="unverify">
+                                                        <button class="btn btn-sm btn-warning" title="Unverify"><i class="fas fa-ban"></i></button>
+                                                    </form>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            <form action="${pageContext.request.contextPath}/admin/delete_user" method="post" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                                                <input type="hidden" name="userId" value="${u.userId}">
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </c:if>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            <c:if test="${empty users}"><tr><td colspan="10" class="text-center text-muted py-4">No customers found</td></tr></c:if>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
 
-            <div class="card card-modern border-0">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>User ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>NIC/License</th>
-                                    <th>Date Joined</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="customerTableBody">
-                                <tr>
-                                    <td class="fw-bold">#USR-5501</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
-                                                style="width:32px;height:32px"><i class="fas fa-user text-primary"></i></div>
-                                            <span>John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td>john@example.com</td>
-                                    <td>077 123 4567</td>
-                                    <td>951234567V</td>
-                                    <td>12 Jan 2024</td>
-                                    <td><span class="badge bg-success">Active</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info me-1" title="View Details"
-                                            data-bs-toggle="modal" data-bs-target="#viewCustomerModal1"><i
-                                                class="fas fa-eye"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Ban User"><i
-                                                class="fas fa-ban"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">#USR-5502</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
-                                                style="width:32px;height:32px"><i class="fas fa-user text-secondary"></i></div>
-                                            <span>Jane Smith</span>
-                                        </div>
-                                    </td>
-                                    <td>jane@example.com</td>
-                                    <td>071 987 6543</td>
-                                    <td>987654321V</td>
-                                    <td>15 Feb 2024</td>
-                                    <td><span class="badge bg-success">Active</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info me-1" title="View Details"
-                                            data-bs-toggle="modal" data-bs-target="#viewCustomerModal2"><i
-                                                class="fas fa-eye"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Ban User"><i
-                                                class="fas fa-ban"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <nav class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                        </ul>
-                    </nav>
-                </div>
+                <c:if test="${totalPages > 1}">
+                    <nav class="mt-3"><ul class="pagination justify-content-center">
+                        <c:forEach begin="1" end="${totalPages}" var="i">
+                            <li class="page-item ${currentPage == i ? 'active' : ''}"><a class="page-link" href="${pageContext.request.contextPath}/admin/customers?page=${i}">${i}</a></li>
+                        </c:forEach>
+                    </ul></nav>
+                </c:if>
             </div>
         </main>
 
-        <!-- ===== VIEW CUSTOMER MODAL 1 ===== -->
-        <div class="modal fade" id="viewCustomerModal1" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title"><i class="fas fa-user me-2"></i>Customer Details</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="text-center mb-4">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3"
-                                style="width:80px;height:80px">
-                                <i class="fas fa-user fa-2x text-primary"></i>
-                            </div>
-                            <h4 class="fw-bold">John Doe</h4>
-                            <span class="badge bg-success">Active</span>
+        <!-- View Customer Modals (placed outside main layout to ensure stability) -->
+        <c:forEach var="u" items="${users}">
+            <div class="modal fade" id="viewCustomerModal${u.userId}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-address-card text-info me-2"></i>Customer Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0 p-3">
-                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-id-card me-2"></i>Personal Info</h6>
-                                    <p class="mb-1"><strong>User ID:</strong> #USR-5501</p>
-                                    <p class="mb-1"><strong>Email:</strong> john@example.com</p>
-                                    <p class="mb-1"><strong>Phone:</strong> 077 123 4567</p>
-                                    <p class="mb-0"><strong>NIC/License:</strong> 951234567V</p>
-                                </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-4">
+                                <div class="display-4 text-secondary mb-2"><i class="fas fa-user-circle"></i></div>
+                                <h4 class="fw-bold mb-0">${u.fullName}</h4>
+                                <span class="badge ${u.role == 'Admin' ? 'bg-danger' : 'bg-primary'} mt-1">${u.role}</span>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0 p-3">
-                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-chart-bar me-2"></i>Activity</h6>
-                                    <p class="mb-1"><strong>Joined:</strong> 12 Jan 2024</p>
-                                    <p class="mb-1"><strong>Total Rentals:</strong> 5</p>
-                                    <p class="mb-1"><strong>Total Spent:</strong> Rs. 45,000</p>
-                                    <p class="mb-0"><strong>Last Rental:</strong> 20 Mar 2026</p>
-                                </div>
-                            </div>
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr><th class="text-muted" style="width: 40%;">User ID</th><td class="fw-bold">#${u.userId}</td></tr>
+                                    <tr><th class="text-muted">Username</th><td>${u.username}</td></tr>
+                                    <tr><th class="text-muted">Email</th><td>${u.email}</td></tr>
+                                    <tr><th class="text-muted">Phone</th><td>${u.phone}</td></tr>
+                                    <tr><th class="text-muted">License No</th><td><code class="text-dark bg-light px-2 py-1 rounded">${u.licenseNo}</code></td></tr>
+                                    <tr><th class="text-muted">Verification</th>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${u.verified}"><span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Verified</span></c:when>
+                                                <c:otherwise><span class="badge bg-secondary"><i class="fas fa-times-circle me-1"></i>Unverified</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                    <tr><th class="text-muted">Joined On</th><td><fmt:formatDate value="${u.createdAt}" pattern="dd MMM yyyy, HH:mm" /></td></tr>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-danger"><i class="fas fa-ban me-1"></i>Ban User</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- ===== VIEW CUSTOMER MODAL 2 ===== -->
-        <div class="modal fade" id="viewCustomerModal2" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title"><i class="fas fa-user me-2"></i>Customer Details</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="text-center mb-4">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3"
-                                style="width:80px;height:80px">
-                                <i class="fas fa-user fa-2x text-secondary"></i>
-                            </div>
-                            <h4 class="fw-bold">Jane Smith</h4>
-                            <span class="badge bg-success">Active</span>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0 p-3">
-                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-id-card me-2"></i>Personal Info</h6>
-                                    <p class="mb-1"><strong>User ID:</strong> #USR-5502</p>
-                                    <p class="mb-1"><strong>Email:</strong> jane@example.com</p>
-                                    <p class="mb-1"><strong>Phone:</strong> 071 987 6543</p>
-                                    <p class="mb-0"><strong>NIC/License:</strong> 987654321V</p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0 p-3">
-                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-chart-bar me-2"></i>Activity</h6>
-                                    <p class="mb-1"><strong>Joined:</strong> 15 Feb 2024</p>
-                                    <p class="mb-1"><strong>Total Rentals:</strong> 3</p>
-                                    <p class="mb-1"><strong>Total Spent:</strong> Rs. 28,500</p>
-                                    <p class="mb-0"><strong>Last Rental:</strong> 10 Mar 2026</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-danger"><i class="fas fa-ban me-1"></i>Ban User</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Search Script -->
-        <script>
-        function searchTable(inputId, tbodyId) {
-            var filter = document.getElementById(inputId).value.toUpperCase();
-            var rows = document.getElementById(tbodyId).getElementsByTagName('tr');
-            for (var i = 0; i < rows.length; i++) {
-                var text = rows[i].textContent || rows[i].innerText;
-                rows[i].style.display = text.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
-            }
-        }
-        </script>
+        </c:forEach>
 
         <%@ include file="components/adminFooter.jsp" %>

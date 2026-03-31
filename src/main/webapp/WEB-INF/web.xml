@@ -5,7 +5,7 @@
                              https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
 
-    <!-- Explicit servlet definition as backup for @WebServlet annotation -->
+    <!-- ========== Page Controller (GET routes + auth POST) ========== -->
     <servlet>
         <servlet-name>PageController</servlet-name>
         <servlet-class>com.carent.controller.PageController</servlet-class>
@@ -49,6 +49,14 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
+        <url-pattern>/my_bookings</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/booking</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
         <url-pattern>/perform_login</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
@@ -69,7 +77,33 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
+        <url-pattern>/send_otp</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/verify_otp</url-pattern>
+    </servlet-mapping>
+
+    <!-- Admin GET routes -->
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/dashboard</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/vehicles</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
         <url-pattern>/admin/rent</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/customers</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/coupons</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
@@ -77,11 +111,136 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
-        <url-pattern>/admin/reviews</url-pattern>
+        <url-pattern>/admin/notifications</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PageController</servlet-name>
-        <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/admin/profile</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/reviews</url-pattern>
+    </servlet-mapping>
+
+    <!-- ========== Admin Controller (Admin POST actions) ========== -->
+    <servlet>
+        <servlet-name>AdminController</servlet-name>
+        <servlet-class>com.carent.controller.AdminController</servlet-class>
+        <multipart-config>
+            <max-file-size>10485760</max-file-size>
+            <max-request-size>20971520</max-request-size>
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/add_car</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/edit_car</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/delete_car</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/update_car_status</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/confirm_booking</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/complete_booking</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/cancel_booking</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/mark_paid</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/add_coupon</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/edit_coupon</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/delete_coupon</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/send_notification</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/reply_message</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/verify_user</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/delete_user</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/delete_review</url-pattern>
+    </servlet-mapping>
+
+    <!-- ========== Booking Controller ========== -->
+    <servlet>
+        <servlet-name>BookingController</servlet-name>
+        <servlet-class>com.carent.controller.BookingController</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>BookingController</servlet-name>
+        <url-pattern>/book_car</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BookingController</servlet-name>
+        <url-pattern>/cancel_booking</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BookingController</servlet-name>
+        <url-pattern>/validate_coupon</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BookingController</servlet-name>
+        <url-pattern>/calculate_price</url-pattern>
+    </servlet-mapping>
+
+    <!-- ========== Review Controller ========== -->
+    <servlet>
+        <servlet-name>ReviewController</servlet-name>
+        <servlet-class>com.carent.controller.ReviewController</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ReviewController</servlet-name>
+        <url-pattern>/submit_review</url-pattern>
+    </servlet-mapping>
+
+    <!-- ========== Contact Controller ========== -->
+    <servlet>
+        <servlet-name>ContactController</servlet-name>
+        <servlet-class>com.carent.controller.ContactController</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ContactController</servlet-name>
+        <url-pattern>/send_message</url-pattern>
     </servlet-mapping>
 
     <!-- CORRECTLY SERVE STATIC ASSETS -->

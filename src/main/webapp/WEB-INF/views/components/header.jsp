@@ -20,6 +20,16 @@
 
         <body>
 
+            <!-- Global Loading Overlay -->
+            <div id="globalLoader" class="global-loader" style="display: none;">
+                <div class="loader-content">
+                    <div class="car-loader">
+                        <i class="fas fa-car-side loader-car"></i>
+                        <div class="loader-road"></div>
+                    </div>
+                    <p class="loader-text">Loading...</p>
+                </div>
+            </div>
             <!-- Navbar -->
             <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
                 <div class="container">

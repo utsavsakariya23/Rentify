@@ -70,32 +70,37 @@
                     <div class="col-lg-7">
                         <div class="card card-modern border-0 p-4 h-100">
                             <h3 class="fw-bold mb-4">Send Message</h3>
-                            <form>
+                            <form class="needs-validation" novalidate id="contactForm">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">FIRST NAME</label>
                                         <input type="text" class="form-control bg-light border-0 py-2"
-                                            placeholder="utsav">
+                                            placeholder="Enter your first name" required>
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your first name.</div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">LAST NAME</label>
                                         <input type="text" class="form-control bg-light border-0 py-2"
-                                            placeholder="sakariya">
+                                            placeholder="Enter your last name" required>
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your last name.</div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">EMAIL</label>
                                         <input type="email" class="form-control bg-light border-0 py-2"
-                                            placeholder="Utsavsakariya@gmail.com">
+                                            placeholder="Enter your email" required>
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter a valid email address.</div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">PHONE</label>
                                         <input type="tel" class="form-control bg-light border-0 py-2"
-                                            placeholder="+91 77 123 4567">
+                                            placeholder="Enter Your Phone Number" pattern="^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$" required>
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter a valid phone number.</div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">MESSAGE</label>
                                         <textarea class="form-control bg-light border-0 py-2" rows="5"
-                                            placeholder="Your message here..."></textarea>
+                                            placeholder="Your message here..." required></textarea>
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your message.</div>
                                     </div>
                                     <div class="col-12 text-end">
                                         <button type="submit" class="btn btn-primary-custom px-5 btn-lg">Send
@@ -117,5 +122,22 @@
                 </div>
             </section>
         </main>
+
+        <script>
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms)
+                    .forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                            }
+                            form.classList.add('was-validated')
+                        }, false)
+                    })
+            })()
+        </script>
 
         <%@ include file="components/footer.jsp" %>

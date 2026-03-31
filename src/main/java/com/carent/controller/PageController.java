@@ -1,19 +1,36 @@
 package com.carent.controller;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import com.carent.model.User;
-import com.carent.repository.UserDAO;
 
-// Configured via web.xml mappings
+import com.carent.model.*;
+import com.carent.repository.UserDAO;
+import com.carent.repository.ContactMessageDAO;
+import com.carent.service.OTPService;
+import com.carent.service.EmailService;
+import com.carent.service.*;
+
 public class PageController extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final int PAGE_SIZE = 5;
+
     private UserDAO userDAO = new UserDAO();
+    private CarService carService = new CarService();
+    private BookingService bookingService = new BookingService();
+    private CouponService couponService = new CouponService();
+    private ReviewService reviewService = new ReviewService();
+    private NotificationService notificationService = new NotificationService();
+    private ContactMessageDAO contactMessageDAO = new ContactMessageDAO();
+    private OTPService otpService = new OTPService();
+    private EmailService emailService = new EmailService();
 
     @Override
     public void init() throws ServletException {
@@ -51,21 +68,53 @@ public class PageController extends HttpServlet {
             return;
         }
 
+        // Get pagination parameter
+        int page = 1;
+        try {
+            String pageStr = request.getParameter("page");
+            if (pageStr != null) page = Integer.parseInt(pageStr);
+            if (page < 1) page = 1;
+        } catch (NumberFormatException ignored) {}
+
         switch (action) {
             case "/home":
+                // Load featured cars for homepage
+                List<Car> featuredCars = carService.getAvailableCars();
+                request.setAttribute("featuredCars", featuredCars);
                 request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
                 break;
+
             case "/vehicles":
+                // Load cars with optional search filters
+                String keyword = request.getParameter("keyword");
+                String fuelType = request.getParameter("fuelType");
+                String transmission = request.getParameter("transmission");
+                String maxPriceStr = request.getParameter("maxPrice");
+                BigDecimal maxPrice = null;
+                if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
+                    try { maxPrice = new BigDecimal(maxPriceStr); } catch (Exception ignored) {}
+                }
+
+                List<Car> cars;
+                if (keyword != null || fuelType != null || transmission != null || maxPrice != null) {
+                    cars = carService.searchCars(keyword, fuelType, transmission, maxPrice);
+                } else {
+                    cars = carService.getAvailableCars();
+                }
+                request.setAttribute("cars", cars);
+                request.setAttribute("carCount", cars.size());
                 request.getRequestDispatcher("/WEB-INF/views/vehicles.jsp").forward(request, response);
                 break;
+
             case "/contact":
                 request.getRequestDispatcher("/WEB-INF/views/contact.jsp").forward(request, response);
                 break;
+
             case "/about":
                 request.getRequestDispatcher("/WEB-INF/views/about.jsp").forward(request, response);
                 break;
+
             case "/login":
-                // If already logged in, redirect
                 if (request.getSession(false) != null && request.getSession(false).getAttribute("loggedUser") != null) {
                     User u = (User) request.getSession(false).getAttribute("loggedUser");
                     if ("Admin".equalsIgnoreCase(u.getRole())) {
@@ -77,26 +126,92 @@ public class PageController extends HttpServlet {
                 }
                 request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
                 break;
+
             case "/register":
                 request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
                 break;
+
             case "/car_info":
+                String carIdStr = request.getParameter("id");
+                if (carIdStr != null) {
+                    try {
+                        int carId = Integer.parseInt(carIdStr);
+                        Car car = carService.getCarById(carId);
+                        if (car != null) {
+                            List<Review> carReviews = reviewService.getReviewsByCarId(carId);
+                            request.setAttribute("car", car);
+                            request.setAttribute("reviews", carReviews);
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
                 request.getRequestDispatcher("/WEB-INF/views/car_info.jsp").forward(request, response);
                 break;
+
             case "/profile":
-                // Require login
                 if (request.getSession(false) == null || request.getSession(false).getAttribute("loggedUser") == null) {
                     response.sendRedirect(request.getContextPath() + "/login?error=true");
                     return;
                 }
+                User profileUser = (User) request.getSession(false).getAttribute("loggedUser");
+                List<Booking> allProfileBookings = bookingService.getBookingsByUser(profileUser.getUserId());
+                
+                long currTime = System.currentTimeMillis();
+                List<Booking> upcomingBookings = new java.util.ArrayList<>();
+                List<Booking> pastBookings = new java.util.ArrayList<>();
+                
+                for (Booking b : allProfileBookings) {
+                    // Check if the booking is currently active/upcoming (Pending/Confirmed and end_date >= today)
+                    if (("Pending".equals(b.getBookingStatus()) || "Confirmed".equals(b.getBookingStatus())) && b.getEndDate().getTime() >= currTime - 86400000L) {
+                        upcomingBookings.add(b);
+                    } else {
+                        pastBookings.add(b);
+                        // Add can review attribute for past completed bookings
+                        boolean canReview = "Completed".equals(b.getBookingStatus()) && !reviewService.hasReviewForBooking(b.getBookingId());
+                        request.setAttribute("canReview_" + b.getBookingId(), canReview);
+                    }
+                }
+                
+                request.setAttribute("upcomingBookings", upcomingBookings);
+                request.setAttribute("pastBookings", pastBookings);
                 request.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(request, response);
                 break;
+
+            case "/my_bookings":
+                if (request.getSession(false) == null || request.getSession(false).getAttribute("loggedUser") == null) {
+                    response.sendRedirect(request.getContextPath() + "/login?error=true");
+                    return;
+                }
+                User bookingUser = (User) request.getSession(false).getAttribute("loggedUser");
+                List<Booking> userBookings = bookingService.getBookingsByUser(bookingUser.getUserId());
+                // Check review eligibility for each booking
+                for (Booking b : userBookings) {
+                    boolean canReview = "Completed".equals(b.getBookingStatus()) && !reviewService.hasReviewForBooking(b.getBookingId());
+                    request.setAttribute("canReview_" + b.getBookingId(), canReview);
+                }
+                request.setAttribute("bookings", userBookings);
+                request.getRequestDispatcher("/WEB-INF/views/my_bookings.jsp").forward(request, response);
+                break;
+
+            case "/booking":
+                if (request.getSession(false) == null || request.getSession(false).getAttribute("loggedUser") == null) {
+                    response.sendRedirect(request.getContextPath() + "/login?error=true");
+                    return;
+                }
+                String bookCarIdStr = request.getParameter("carId");
+                if (bookCarIdStr != null) {
+                    try {
+                        Car bookCar = carService.getCarById(Integer.parseInt(bookCarIdStr));
+                        request.setAttribute("car", bookCar);
+                    } catch (NumberFormatException ignored) {}
+                }
+                request.getRequestDispatcher("/WEB-INF/views/booking.jsp").forward(request, response);
+                break;
+
             case "/logout":
                 HttpSession sess = request.getSession(false);
                 if (sess != null) {
                     sess.invalidate();
                 }
-                // Clear remember-me cookie
                 Cookie clearCookie = new Cookie("rememberUser", "");
                 clearCookie.setMaxAge(0);
                 clearCookie.setPath("/");
@@ -104,32 +219,89 @@ public class PageController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/login?logout=true");
                 break;
 
-            // Admin Routes
+            // ====== Admin Routes ======
             case "/admin/dashboard":
+                request.setAttribute("totalUsers", userDAO.getCustomerCount());
+                request.setAttribute("totalBookings", bookingService.getBookingCount());
+                request.setAttribute("totalRevenue", bookingService.getTotalRevenue());
+                request.setAttribute("activeCars", carService.getActiveCarCount());
+                request.setAttribute("totalCars", carService.getCarCount());
+                request.setAttribute("pendingBookings", bookingService.getPendingBookingCount());
+                request.setAttribute("recentBookings", bookingService.getRecentBookings(5));
                 request.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(request, response);
                 break;
+
             case "/admin/vehicles":
+                List<Car> adminCars = carService.getCarsWithPagination(page, PAGE_SIZE);
+                int totalCars = carService.getCarCount();
+                request.setAttribute("cars", adminCars);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalCars / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/vehicles.jsp").forward(request, response);
                 break;
+
             case "/admin/rent":
+                List<Booking> adminBookings = bookingService.getBookingsWithPagination(page, PAGE_SIZE);
+                int totalBookings = bookingService.getBookingCount();
+                request.setAttribute("bookings", adminBookings);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalBookings / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/rentrequest.jsp").forward(request, response);
                 break;
+
+            case "/admin/payments": {
+                List<Booking> adminPaymentsList = bookingService.getBookingsWithPagination(page, PAGE_SIZE);
+                int adminTotalPaymentsCount = bookingService.getBookingCount();
+                request.setAttribute("payments", adminPaymentsList);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) adminTotalPaymentsCount / PAGE_SIZE));
+                request.getRequestDispatcher("/WEB-INF/views/admin/payments.jsp").forward(request, response);
+                break;
+            }
+
             case "/admin/customers":
+                List<User> adminUsers = userDAO.getUsersWithPagination((page - 1) * PAGE_SIZE, PAGE_SIZE);
+                int totalUsers = userDAO.getUserCount();
+                request.setAttribute("users", adminUsers);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalUsers / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/customers.jsp").forward(request, response);
                 break;
+
             case "/admin/coupons":
+                List<Coupon> coupons = couponService.getAllCoupons();
+                request.setAttribute("coupons", coupons);
                 request.getRequestDispatcher("/WEB-INF/views/admin/coupons.jsp").forward(request, response);
                 break;
+
             case "/admin/messages":
+                List<ContactMessage> messages = contactMessageDAO.getMessagesWithPagination((page - 1) * PAGE_SIZE, PAGE_SIZE);
+                int totalMessages = contactMessageDAO.getMessageCount();
+                request.setAttribute("messages", messages);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalMessages / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/messages.jsp").forward(request, response);
                 break;
+
             case "/admin/notifications":
+                List<Notification> notifications = notificationService.getNotificationsWithPagination(page, PAGE_SIZE);
+                int totalNotifications = notificationService.getNotificationCount();
+                request.setAttribute("notifications", notifications);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalNotifications / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/notifications.jsp").forward(request, response);
                 break;
+
             case "/admin/profile":
                 request.getRequestDispatcher("/WEB-INF/views/admin/profile.jsp").forward(request, response);
                 break;
+
             case "/admin/reviews":
+                List<Review> reviews = reviewService.getReviewsWithPagination(page, PAGE_SIZE);
+                int totalReviews = reviewService.getTotalReviewCount();
+                request.setAttribute("reviews", reviews);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalReviews / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/reviews.jsp").forward(request, response);
                 break;
 
@@ -159,6 +331,10 @@ public class PageController extends HttpServlet {
             handleChangePassword(request, response);
         } else if (action.equals("/validate_unique")) {
             handleValidateUnique(request, response);
+        } else if (action.equals("/send_otp")) {
+            handleSendOTP(request, response);
+        } else if (action.equals("/verify_otp")) {
+            handleVerifyOTP(request, response);
         } else {
             doGet(request, response);
         }
@@ -241,7 +417,69 @@ public class PageController extends HttpServlet {
         }
     }
 
+    /**
+     * AJAX: Send OTP to the provided email.
+     */
+    private void handleSendOTP(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        String email = request.getParameter("email");
+
+        if (email == null || email.trim().isEmpty()) {
+            response.getWriter().write("{\"success\": false, \"message\": \"Email is required.\"}");
+            return;
+        }
+
+        email = email.trim();
+
+        // Check if email is already registered
+        if (userDAO.isEmailTaken(email)) {
+            response.getWriter().write("{\"success\": false, \"message\": \"This email is already registered.\"}");
+            return;
+        }
+
+        // Generate and send OTP
+        String otp = otpService.generateOTP(email);
+        emailService.sendOTPEmail(email, otp);
+
+        response.getWriter().write("{\"success\": true, \"message\": \"OTP sent to " + email + ". Check your inbox.\"}");
+    }
+
+    /**
+     * AJAX: Verify OTP code.
+     */
+    private void handleVerifyOTP(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        String email = request.getParameter("email");
+        String otp = request.getParameter("otp");
+
+        if (email == null || otp == null || email.trim().isEmpty() || otp.trim().isEmpty()) {
+            response.getWriter().write("{\"success\": false, \"message\": \"Email and OTP are required.\"}");
+            return;
+        }
+
+        boolean valid = otpService.verifyOTP(email.trim(), otp.trim());
+
+        if (valid) {
+            // Store verified email in session for registration validation
+            HttpSession session = request.getSession(true);
+            session.setAttribute("otpVerifiedEmail", email.trim().toLowerCase());
+            response.getWriter().write("{\"success\": true, \"message\": \"Email verified successfully!\"}");
+        } else {
+            response.getWriter().write("{\"success\": false, \"message\": \"Invalid or expired OTP. Please try again.\"}");
+        }
+    }
+
+    /**
+     * AJAX Registration with OTP pre-verification.
+     */
     private void handleRegister(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
@@ -250,49 +488,55 @@ public class PageController extends HttpServlet {
         String confirmPassword = request.getParameter("confirmPassword");
         String licenseNo = request.getParameter("licenseNo");
 
-        // Server-side validation
+        // Validate required fields
         if (fullName == null || fullName.trim().isEmpty()
                 || email == null || email.trim().isEmpty()
                 || username == null || username.trim().isEmpty()
                 || password == null || password.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/register?error=empty");
+            response.getWriter().write("{\"success\": false, \"message\": \"All required fields must be filled.\"}");
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            response.sendRedirect(request.getContextPath() + "/register?error=mismatch");
+            response.getWriter().write("{\"success\": false, \"message\": \"Passwords do not match.\"}");
             return;
         }
 
-        // Check username duplicate
+        // Verify OTP was completed for this email
+        HttpSession session = request.getSession(false);
+        String verifiedEmail = session != null ? (String) session.getAttribute("otpVerifiedEmail") : null;
+        if (verifiedEmail == null || !verifiedEmail.equals(email.trim().toLowerCase())) {
+            response.getWriter().write("{\"success\": false, \"message\": \"Please verify your email with OTP first.\"}");
+            return;
+        }
+
         if (userDAO.isUsernameTaken(username.trim())) {
-            response.sendRedirect(request.getContextPath() + "/register?error=username_taken");
+            response.getWriter().write("{\"success\": false, \"message\": \"Username is already taken.\"}");
             return;
         }
 
-        // Check email duplicate
         if (userDAO.isEmailTaken(email.trim())) {
-            response.sendRedirect(request.getContextPath() + "/register?error=email_taken");
+            response.getWriter().write("{\"success\": false, \"message\": \"Email is already registered.\"}");
             return;
         }
 
-        // Hash the password before storing
         String hashedPassword = com.carent.util.PasswordUtil.hashPassword(password);
 
-        // Create user with Customer role and hashed password
         User user = new User(fullName.trim(), email.trim(),
                 phone != null ? phone.trim() : "",
                 username.trim(), hashedPassword,
                 licenseNo != null ? licenseNo.trim() : "");
+        user.setVerified(true); // OTP-verified email
 
         String dbError = userDAO.insertUser(user);
-        System.out.println("--- Register attempt: " + username + " => " + (dbError == null ? "SUCCESS" : "FAILED: " + dbError));
 
         if (dbError == null) {
-            response.sendRedirect(request.getContextPath() + "/login?registered=true");
+            // Clear OTP session data
+            if (session != null) session.removeAttribute("otpVerifiedEmail");
+            response.getWriter().write("{\"success\": true, \"message\": \"Account created successfully! You can now login.\"}");
         } else {
-            response.sendRedirect(request.getContextPath() + "/register?error=failed&detail=" +
-                    java.net.URLEncoder.encode(dbError, "UTF-8"));
+            response.getWriter().write("{\"success\": false, \"message\": \"Registration failed: " +
+                    dbError.replace("\"", "'") + "\"}" );
         }
     }
 
@@ -304,7 +548,7 @@ public class PageController extends HttpServlet {
         }
 
         User currentUser = (User) session.getAttribute("loggedUser");
-        
+
         String fullName = request.getParameter("fullName");
         String phone = request.getParameter("phone");
         String licenseNo = request.getParameter("licenseNo");
@@ -314,16 +558,14 @@ public class PageController extends HttpServlet {
             return;
         }
 
-        // Update object
         currentUser.setFullName(fullName.trim());
         currentUser.setPhone(phone.trim());
         if (licenseNo != null) currentUser.setLicenseNo(licenseNo.trim());
 
-        // Update DB
         boolean success = userDAO.updateUser(currentUser);
 
         if (success) {
-            session.setAttribute("loggedUser", currentUser); // Refresh session
+            session.setAttribute("loggedUser", currentUser);
             response.sendRedirect(request.getContextPath() + "/profile?success=profile_updated");
         } else {
             response.sendRedirect(request.getContextPath() + "/profile?error=profile_failed");
@@ -354,20 +596,16 @@ public class PageController extends HttpServlet {
             return;
         }
 
-        // Verify current password hash
         if (!com.carent.util.PasswordUtil.verifyPassword(currentPassword, currentUser.getPassword())) {
             response.sendRedirect(request.getContextPath() + "/profile?error=wrong_password");
             return;
         }
 
-        // Generate new hash
         String newHash = com.carent.util.PasswordUtil.hashPassword(newPassword);
 
-        // Update DB
         boolean success = userDAO.updatePassword(currentUser.getUserId(), newHash);
 
         if (success) {
-            // Update session so it doesn't break out of sync
             currentUser.setPassword(newHash);
             session.setAttribute("loggedUser", currentUser);
             response.sendRedirect(request.getContextPath() + "/profile?success=password_changed");

@@ -13,22 +13,15 @@ import java.util.List;
  */
 public class UserDAO {
 
-    /**
-     * Authenticate a user by username OR email, and hashed password.
-     * Fetches user by username or email, then verifies the password hash.
-     */
     public User getUserByUsernameAndPassword(String identifier, String password) {
         String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, identifier);
             ps.setString(2, identifier);
-
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     User user = mapResultSetToUser(rs);
-                    // Verify entered password against stored hash
                     if (PasswordUtil.verifyPassword(password, user.getPassword())) {
                         return user;
                     }
@@ -40,9 +33,6 @@ public class UserDAO {
         return null;
     }
 
-    /**
-     * Check if a username already exists in the database.
-     */
     public boolean isUsernameTaken(String username) {
         String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -57,9 +47,6 @@ public class UserDAO {
         return false;
     }
 
-    /**
-     * Check if an email already exists in the database.
-     */
     public boolean isEmailTaken(String email) {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -74,9 +61,6 @@ public class UserDAO {
         return false;
     }
 
-    /**
-     * Check if a license number already exists in the database.
-     */
     public boolean isLicenseNoTaken(String licenseNo) {
         String sql = "SELECT COUNT(*) FROM users WHERE license_no = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -91,41 +75,26 @@ public class UserDAO {
         return false;
     }
 
-    /**
-     * Check if a username or email already exists.
-     * Returns true if either is taken.
-     */
     public boolean isUsernameOrEmailTaken(String username, String email) {
         String sql = "SELECT COUNT(*) FROM users WHERE username = ? OR email = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, username);
             ps.setString(2, email);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
+                if (rs.next()) return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.out.println("=== CHECK USERNAME/EMAIL FAILED ===");
-            System.out.println("SQL Error: " + e.getMessage());
             e.printStackTrace();
         }
         return false;
     }
 
-    /**
-     * Register a new user (Customer).
-     * Returns null if successful, or an error message string on failure.
-     */
     public String insertUser(User user) {
-        String sql = "INSERT INTO users (full_name, email, phone, username, password, license_no, role) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (full_name, email, phone, username, password, license_no, role, is_verified) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
@@ -133,28 +102,22 @@ public class UserDAO {
             ps.setString(5, user.getPassword());
             ps.setString(6, user.getLicenseNo());
             ps.setString(7, user.getRole() != null ? user.getRole() : "Customer");
-
+            ps.setBoolean(8, user.isVerified());
             int rows = ps.executeUpdate();
-            if (rows > 0) return null; // success
+            if (rows > 0) return null;
             return "No rows inserted";
         } catch (SQLException e) {
-            System.out.println("=== INSERT USER FAILED ===");
-            System.out.println("SQL Error: " + e.getMessage());
             e.printStackTrace();
             return e.getMessage();
         }
     }
 
-    /**
-     * Get all users (for admin customer management).
-     */
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users ORDER BY created_at DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
             }
@@ -164,20 +127,31 @@ public class UserDAO {
         return users;
     }
 
-    /**
-     * Get a single user by ID.
-     */
+    public List<User> getUsersWithPagination(int offset, int limit) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
     public User getUserById(int userId) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, userId);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
+                if (rs.next()) return mapResultSetToUser(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -185,15 +159,10 @@ public class UserDAO {
         return null;
     }
 
-    /**
-     * Delete a user by ID.
-     * Returns true if deletion was successful.
-     */
     public boolean deleteUser(int userId) {
         String sql = "DELETE FROM users WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, userId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -202,23 +171,16 @@ public class UserDAO {
         return false;
     }
 
-    /**
-     * Update user details.
-     * Returns true if update was successful.
-     */
     public boolean updateUser(User user) {
-        String sql = "UPDATE users SET full_name = ?, email = ?, phone = ?, license_no = ?, role = ? " +
-                     "WHERE user_id = ?";
+        String sql = "UPDATE users SET full_name = ?, email = ?, phone = ?, license_no = ?, role = ? WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
             ps.setString(4, user.getLicenseNo());
             ps.setString(5, user.getRole());
             ps.setInt(6, user.getUserId());
-
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -226,18 +188,12 @@ public class UserDAO {
         return false;
     }
 
-    /**
-     * Update user password.
-     * Returns true if update was successful.
-     */
     public boolean updatePassword(int userId, String newPasswordHash) {
         String sql = "UPDATE users SET password = ? WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, newPasswordHash);
             ps.setInt(2, userId);
-
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -245,7 +201,60 @@ public class UserDAO {
         return false;
     }
 
-    // ---- Helper ----
+    public boolean updateVerificationStatus(int userId, boolean verified) {
+        String sql = "UPDATE users SET is_verified = ? WHERE user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, verified);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public int getUserCount() {
+        String sql = "SELECT COUNT(*) FROM users";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getCustomerCount() {
+        String sql = "SELECT COUNT(*) FROM users WHERE role = 'Customer'";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * Get all customer emails for BCC notifications.
+     */
+    public List<String> getAllCustomerEmails() {
+        List<String> emails = new ArrayList<>();
+        String sql = "SELECT email FROM users WHERE role = 'Customer'";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                emails.add(rs.getString("email"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return emails;
+    }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
@@ -257,6 +266,7 @@ public class UserDAO {
         user.setPassword(rs.getString("password"));
         user.setLicenseNo(rs.getString("license_no"));
         user.setRole(rs.getString("role"));
+        user.setVerified(rs.getBoolean("is_verified"));
         user.setCreatedAt(rs.getTimestamp("created_at"));
         return user;
     }

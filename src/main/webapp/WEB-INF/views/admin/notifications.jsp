@@ -1,106 +1,53 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
     <%@ include file="components/adminHeader.jsp" %>
 
-        <main class="container-fluid">
+        <main class="container-fluid my-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold">Push Notifications</h2>
+                <h2 class="fw-bold">Notifications</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendNotificationModal"><i class="fas fa-bell me-2"></i>Send Notification</button>
+            </div>
+            <c:if test="${not empty param.success}">
+                <div class="alert alert-success alert-dismissible fade show">${param.success}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            </c:if>
+            <div class="card card-modern border-0 p-4">
+                <c:forEach var="n" items="${notifications}">
+                    <div class="d-flex align-items-start mb-3 p-3 rounded-3" style="background:#f8f9fa;">
+                        <i class="fas fa-bell text-primary mt-1 me-3"></i>
+                        <div class="flex-grow-1">
+                            <p class="mb-1">${n.message}</p>
+                            <small class="text-muted"><fmt:formatDate value="${n.createdAt}" pattern="dd MMM yyyy HH:mm" /></small>
+                        </div>
+                        <form action="${pageContext.request.contextPath}/admin/delete_notification" method="post" onsubmit="return confirm('Delete?');">
+                            <input type="hidden" name="notificationId" value="${n.notificationId}">
+                        </form>
+                    </div>
+                </c:forEach>
+                <c:if test="${empty notifications}">
+                    <div class="text-center text-muted py-4">No notifications sent yet</div>
+                </c:if>
+                <c:if test="${totalPages > 1}">
+                    <nav class="mt-3"><ul class="pagination justify-content-center">
+                        <c:forEach begin="1" end="${totalPages}" var="i">
+                            <li class="page-item ${currentPage == i ? 'active' : ''}"><a class="page-link" href="${pageContext.request.contextPath}/admin/notifications?page=${i}">${i}</a></li>
+                        </c:forEach>
+                    </ul></nav>
+                </c:if>
             </div>
 
-            <div class="row g-4">
-                <!-- Send Notification Form -->
-                <div class="col-lg-6">
-                    <div class="card card-modern border-0 h-100">
-                        <div class="card-header bg-white border-bottom-0 pt-4 px-4">
-                            <h5 class="fw-bold mb-0"><i class="fas fa-paper-plane text-primary me-2"></i>Send Notification</h5>
+            <!-- Send Notification Modal -->
+            <div class="modal fade" id="sendNotificationModal" tabindex="-1">
+                <div class="modal-dialog"><div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Send Notification</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <form action="${pageContext.request.contextPath}/admin/send_notification" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3"><label class="form-label">Message</label><textarea class="form-control" name="message" rows="4" placeholder="Enter notification message..." required></textarea></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="sendEmail" id="sendEmail"><label class="form-check-label" for="sendEmail">Also send via email (BCC to all customers)</label></div>
                         </div>
-                        <div class="card-body p-4">
-                            <form id="sendNotificationForm">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Target Audience</label>
-                                    <select class="form-select">
-                                        <option value="all">All Customers</option>
-                                        <option value="active">Active Rentals Only</option>
-                                        <option value="inactive">Inactive (Last 30 Days)</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Notification Title</label>
-                                    <input type="text" class="form-control" name="notifTitle" placeholder="e.g. Flash Sale Alert!" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Message</label>
-                                    <textarea class="form-control" rows="4" name="notifMessage"
-                                        placeholder="Type your message here..." required></textarea>
-                                </div>
-                                <div class="d-flex justify-content-end">
-                                    <button type="submit" class="btn btn-primary px-4"><i
-                                            class="fas fa-paper-plane me-2"></i>Send Notification</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Notifications -->
-                <div class="col-lg-6">
-                    <div class="card card-modern border-0 h-100">
-                        <div class="card-header bg-white border-bottom-0 pt-4 px-4">
-                            <h5 class="fw-bold mb-0"><i class="fas fa-bell text-primary me-2"></i>Recent Notifications</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="list-group list-group-flush">
-                                <div class="list-group-item border-0 px-0 py-3">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="d-flex">
-                                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
-                                                style="width:40px;height:40px">
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-1">Summer Sale Announcement</h6>
-                                                <p class="text-muted small mb-0">Sent to: All Customers</p>
-                                            </div>
-                                        </div>
-                                        <span class="text-muted small">2 days ago</span>
-                                    </div>
-                                </div>
-                                <hr class="my-1">
-                                <div class="list-group-item border-0 px-0 py-3">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="d-flex">
-                                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
-                                                style="width:40px;height:40px">
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-1">System Maintenance Update</h6>
-                                                <p class="text-muted small mb-0">Sent to: All Customers</p>
-                                            </div>
-                                        </div>
-                                        <span class="text-muted small">1 week ago</span>
-                                    </div>
-                                </div>
-                                <hr class="my-1">
-                                <div class="list-group-item border-0 px-0 py-3">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="d-flex">
-                                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
-                                                style="width:40px;height:40px">
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-1">New Vehicle Added: BMW X5</h6>
-                                                <p class="text-muted small mb-0">Sent to: Active Rentals</p>
-                                            </div>
-                                        </div>
-                                        <span class="text-muted small">2 weeks ago</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Send</button></div>
+                    </form>
+                </div></div>
             </div>
         </main>
-
         <%@ include file="components/adminFooter.jsp" %>

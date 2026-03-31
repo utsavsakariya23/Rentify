@@ -1,104 +1,88 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
     <%@ include file="components/adminHeader.jsp" %>
 
         <main class="container-fluid my-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold">Manage Coupons</h2>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCouponModal">
-                    <i class="fas fa-plus me-2"></i>Create Coupon
-                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCouponModal"><i class="fas fa-plus me-2"></i>Add Coupon</button>
             </div>
 
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div
-                        class="card card-modern border-0 h-100 bg-primary text-white position-relative overflow-hidden">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h3 class="fw-bold mb-0">SAVE10</h3>
-                                    <p class="mb-0 opacity-75">10% Discount</p>
-                                </div>
-                                <span class="badge bg-white text-primary">Active</span>
-                            </div>
-                            <hr class="bg-white opacity-50">
-                            <p class="mb-1 small opacity-75">Valid Until: <span class="fw-bold">31 Dec 2026</span></p>
-                            <p class="mb-3 small opacity-75">Used: 45 times</p>
-                            <button class="btn btn-sm btn-light text-primary w-100 fw-bold">Edit Coupon</button>
-                        </div>
-                        <div class="position-absolute" style="bottom: -20px; right: -20px; opacity: 0.1;">
-                            <i class="fas fa-ticket-alt fa-8x"></i>
-                        </div>
-                    </div>
+            <c:if test="${not empty param.success}">
+                <div class="alert alert-success alert-dismissible fade show">${param.success}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            </c:if>
+
+            <div class="card card-modern border-0 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>ID</th><th>Code</th><th>Discount %</th><th>Expiry Date</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="c" items="${coupons}">
+                                <tr>
+                                    <td>${c.couponId}</td>
+                                    <td><code class="fw-bold">${c.code}</code></td>
+                                    <td>${c.discountPercentage}%</td>
+                                    <td>${c.expiryDate}</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${c.active}"><span class="badge bg-success">Active</span></c:when>
+                                            <c:otherwise><span class="badge bg-secondary">Inactive</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCouponModal${c.couponId}"><i class="fas fa-edit"></i></button>
+                                        <form action="${pageContext.request.contextPath}/admin/delete_coupon" method="post" style="display:inline;" onsubmit="return confirm('Delete this coupon?');">
+                                            <input type="hidden" name="couponId" value="${c.couponId}">
+                                            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+
+                            </c:forEach>
+                            <c:if test="${empty coupons}"><tr><td colspan="6" class="text-center text-muted py-4">No coupons found</td></tr></c:if>
+                        </tbody>
+                    </table>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="card card-modern border-0 h-100 bg-white">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h3 class="fw-bold mb-0 text-dark">WELCOME500</h3>
-                                    <p class="text-muted mb-0">Flat Rs. 500 Off</p>
-                                </div>
-                                <span class="badge bg-secondary">Expired</span>
-                            </div>
-                            <hr>
-                            <p class="mb-1 small text-muted">Valid Until: <span class="fw-bold">31 Jan 2026</span></p>
-                            <p class="mb-3 small text-muted">Used: 120 times</p>
-                            <button class="btn btn-sm btn-outline-secondary w-100">View Details</button>
-                        </div>
-                    </div>
-                </div>
             </div>
+
         </main>
+
+        <!-- Edit Modals (outside main container to prevent z-index issues) -->
+        <c:forEach var="c" items="${coupons}">
+            <div class="modal fade" id="editCouponModal${c.couponId}" tabindex="-1">
+                <div class="modal-dialog"><div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Edit Coupon</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <form action="${pageContext.request.contextPath}/admin/edit_coupon" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="couponId" value="${c.couponId}">
+                            <div class="mb-3"><label class="form-label">Code</label><input type="text" class="form-control" name="code" value="${c.code}" required></div>
+                            <div class="mb-3"><label class="form-label">Discount %</label><input type="number" class="form-control" name="discountPercentage" value="${c.discountPercentage}" step="0.01" min="1" max="100" required></div>
+                            <div class="mb-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiryDate" value="${c.expiryDate}" required></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="isActive" ${c.active ? 'checked' : ''}><label class="form-check-label">Active</label></div>
+                        </div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+                    </form>
+                </div></div>
+            </div>
+        </c:forEach>
 
         <!-- Add Coupon Modal -->
         <div class="modal fade" id="addCouponModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Create New Coupon</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Add Coupon</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form action="${pageContext.request.contextPath}/admin/add_coupon" method="post">
                     <div class="modal-body">
-                        <form id="addCouponForm">
-                            <div class="mb-3">
-                                <label class="form-label">Coupon Code</label>
-                                <input type="text" class="form-control" name="couponCode" placeholder="e.g. SUMMER2026" required>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label">Discount Value</label>
-                                    <input type="number" class="form-control" name="discountValue" placeholder="10" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">Type</label>
-                                    <select class="form-select">
-                                        <option value="percent">Percentage (%)</option>
-                                        <option value="flat">Flat Amount (Rs)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Valid Until</label>
-                                <input type="date" class="form-control" name="validUntil" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Min Spend Amount (Optional)</label>
-                                <input type="number" class="form-control" placeholder="Rs. 5000">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Usage Limit (Optional)</label>
-                                <input type="number" class="form-control" placeholder="Total uses allowed">
-                            </div>
-                        </form>
+                        <div class="mb-3"><label class="form-label">Code</label><input type="text" class="form-control" name="code" placeholder="e.g. SAVE20" required></div>
+                        <div class="mb-3"><label class="form-label">Discount %</label><input type="number" class="form-control" name="discountPercentage" step="0.01" min="1" max="100" required></div>
+                        <div class="mb-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiryDate" required></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="isActive" checked><label class="form-check-label">Active</label></div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" form="addCouponForm" class="btn btn-primary">Create Coupon</button>
-                    </div>
-                </div>
-            </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Add Coupon</button></div>
+                </form>
+            </div></div>
         </div>
-
         <%@ include file="components/adminFooter.jsp" %>

@@ -1,204 +1,67 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ include file="components/adminHeader.jsp" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+    <%@ include file="components/adminHeader.jsp" %>
 
-    <main class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold">Rent Requests</h2>
-            <div class="d-flex gap-2">
-                <div class="input-group" style="width: 280px;">
-                    <input type="text" class="form-control" id="rentSearch" placeholder="Search requests..."
-                        onkeyup="searchTable('rentSearch', 'rentTableBody')">
-                    <button class="btn btn-outline-secondary"><i class="fas fa-search"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Rent Requests Table -->
-        <div class="card card-modern border-0">
-            <div class="card-body">
+        <main class="container-fluid my-5">
+            <h2 class="fw-bold mb-4">Rent Requests / Bookings</h2>
+            <div class="card card-modern border-0 p-4">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
-                            <tr>
-                                <th>Rent ID</th>
-                                <th>Customer</th>
-                                <th>Vehicle</th>
-                                <th>Pick-up Date</th>
-                                <th>Return Date</th>
-                                <th>Pick-up Place</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
+                            <tr><th>ID</th><th>Customer</th><th>Car</th><th>Pickup</th><th>Drop</th><th>Dates</th><th>Days</th><th>Price</th><th>Status</th><th>Payment</th><th>Actions</th></tr>
                         </thead>
-                        <tbody id="rentTableBody">
-                            <tr>
-                                <td class="fw-bold">#RNT-1001</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
-                                            style="width:32px;height:32px"><i class="fas fa-user text-secondary"></i></div>
-                                        <div>
-                                            <div class="fw-bold">John Doe</div>
-                                            <div class="small text-muted">john@example.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <img src="${pageContext.request.contextPath}/assets/img/toyota_corolla.webp" width="40" class="rounded me-2">
-                                        <span>Corolla 2024</span>
-                                    </div>
-                                </td>
-                                <td>25 Mar 2026</td>
-                                <td>28 Mar 2026</td>
-                                <td>Rajkot</td>
-                                <td><span class="badge bg-warning text-dark">Pending</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-info me-1" title="View" data-bs-toggle="modal"
-                                        data-bs-target="#viewRentModal"><i class="fas fa-eye"></i></button>
-                                    <button class="btn btn-sm btn-outline-success me-1" title="Accept"><i
-                                            class="fas fa-check"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Reject"><i
-                                            class="fas fa-times"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">#RNT-1002</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
-                                            style="width:32px;height:32px"><i class="fas fa-user text-secondary"></i></div>
-                                        <div>
-                                            <div class="fw-bold">Jane Smith</div>
-                                            <div class="small text-muted">jane@example.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <img src="${pageContext.request.contextPath}/assets/img/honda_civic.webp" width="40" class="rounded me-2">
-                                        <span>Civic 2024</span>
-                                    </div>
-                                </td>
-                                <td>20 Mar 2026</td>
-                                <td>23 Mar 2026</td>
-                                <td>Ahmedabad</td>
-                                <td><span class="badge bg-success">Accepted</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-info me-1" title="View"><i class="fas fa-eye"></i></button>
-                                    <button class="btn btn-sm btn-outline-secondary me-1" title="Return"><i
-                                            class="fas fa-undo"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Cancel"><i
-                                            class="fas fa-times"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">#RNT-1003</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
-                                            style="width:32px;height:32px"><i class="fas fa-user text-secondary"></i></div>
-                                        <div>
-                                            <div class="fw-bold">Ravi Patel</div>
-                                            <div class="small text-muted">ravi@example.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <img src="${pageContext.request.contextPath}/assets/img/nissan_x_trail.webp" width="40" class="rounded me-2">
-                                        <span>X-Trail 2024</span>
-                                    </div>
-                                </td>
-                                <td>15 Mar 2026</td>
-                                <td>18 Mar 2026</td>
-                                <td>Surat</td>
-                                <td><span class="badge bg-secondary">Returned</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-info me-1" title="View"><i class="fas fa-eye"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i
-                                            class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
+                        <tbody>
+                            <c:forEach var="b" items="${bookings}">
+                                <tr>
+                                    <td>#${b.bookingId}</td>
+                                    <td>${b.userName}</td>
+                                    <td>${b.carName}</td>
+                                    <td>${b.pickupLocation}</td>
+                                    <td>${b.dropLocation}</td>
+                                    <td class="small">${b.startDate}<br>to ${b.endDate}</td>
+                                    <td>${b.totalDays}</td>
+                                    <td>Rs. <fmt:formatNumber value="${b.finalPrice}" pattern="#,##0" /></td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${b.bookingStatus == 'Pending'}"><span class="badge bg-warning text-dark">Pending</span></c:when>
+                                            <c:when test="${b.bookingStatus == 'Confirmed'}"><span class="badge bg-primary">Confirmed</span></c:when>
+                                            <c:when test="${b.bookingStatus == 'Completed'}"><span class="badge bg-success">Completed</span></c:when>
+                                            <c:when test="${b.bookingStatus == 'Cancelled'}"><span class="badge bg-danger">Cancelled</span></c:when>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${b.paymentStatus == 'Paid'}"><span class="badge bg-success">Paid</span></c:when>
+                                            <c:when test="${b.paymentStatus == 'Refunded'}"><span class="badge bg-info">Refunded</span></c:when>
+                                            <c:otherwise><span class="badge bg-secondary">Unpaid</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <c:if test="${b.bookingStatus == 'Pending'}">
+                                            <form action="${pageContext.request.contextPath}/admin/confirm_booking" method="post" style="display:inline;"><input type="hidden" name="bookingId" value="${b.bookingId}"><button class="btn btn-sm btn-success" title="Confirm"><i class="fas fa-check"></i></button></form>
+                                            <form action="${pageContext.request.contextPath}/admin/cancel_booking" method="post" style="display:inline;"><input type="hidden" name="bookingId" value="${b.bookingId}"><button class="btn btn-sm btn-danger" title="Cancel"><i class="fas fa-times"></i></button></form>
+                                        </c:if>
+                                        <c:if test="${b.bookingStatus == 'Confirmed'}">
+                                            <form action="${pageContext.request.contextPath}/admin/complete_booking" method="post" style="display:inline;"><input type="hidden" name="bookingId" value="${b.bookingId}"><button class="btn btn-sm btn-outline-success">Complete</button></form>
+                                        </c:if>
+                                        <c:if test="${b.paymentStatus == 'Unpaid' && (b.bookingStatus == 'Confirmed' || b.bookingStatus == 'Completed')}">
+                                            <form action="${pageContext.request.contextPath}/admin/mark_paid" method="post" style="display:inline;"><input type="hidden" name="bookingId" value="${b.bookingId}"><button class="btn btn-sm btn-outline-warning">Mark Paid</button></form>
+                                        </c:if>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            <c:if test="${empty bookings}"><tr><td colspan="11" class="text-center text-muted py-4">No bookings found</td></tr></c:if>
                         </tbody>
                     </table>
                 </div>
-                <!-- Pagination -->
-                <nav class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                    </ul>
-                </nav>
+                <c:if test="${totalPages > 1}">
+                    <nav class="mt-3"><ul class="pagination justify-content-center">
+                        <c:forEach begin="1" end="${totalPages}" var="i">
+                            <li class="page-item ${currentPage == i ? 'active' : ''}"><a class="page-link" href="${pageContext.request.contextPath}/admin/rent?page=${i}">${i}</a></li>
+                        </c:forEach>
+                    </ul></nav>
+                </c:if>
             </div>
-        </div>
-    </main>
-
-    <!-- ===== VIEW RENT REQUEST MODAL ===== -->
-    <div class="modal fade" id="viewRentModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Rent Request Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="card bg-light border-0 p-3">
-                                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i>Customer Info</h6>
-                                <p class="mb-1"><strong>Name:</strong> John Doe</p>
-                                <p class="mb-1"><strong>Email:</strong> john@example.com</p>
-                                <p class="mb-0"><strong>Phone:</strong> 077 123 4567</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light border-0 p-3">
-                                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-car me-2"></i>Vehicle Info</h6>
-                                <p class="mb-1"><strong>Vehicle:</strong> Toyota Corolla 2024</p>
-                                <p class="mb-1"><strong>Type:</strong> Sedan</p>
-                                <p class="mb-0"><strong>Price/Day:</strong> Rs. 5,000</p>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card bg-light border-0 p-3">
-                                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Rental Details</h6>
-                                <div class="row">
-                                    <div class="col-md-3"><p class="mb-1"><strong>Rent ID:</strong> #RNT-1001</p></div>
-                                    <div class="col-md-3"><p class="mb-1"><strong>Pick-up:</strong> 25 Mar 2026</p></div>
-                                    <div class="col-md-3"><p class="mb-1"><strong>Return:</strong> 28 Mar 2026</p></div>
-                                    <div class="col-md-3"><p class="mb-1"><strong>Status:</strong> <span class="badge bg-warning text-dark">Pending</span></p></div>
-                                    <div class="col-md-3"><p class="mb-1"><strong>Location:</strong> Rajkot</p></div>
-                                    <div class="col-md-3"><p class="mb-1"><strong>Duration:</strong> 3 days</p></div>
-                                    <div class="col-md-3"><p class="mb-1"><strong>Total:</strong> Rs. 15,000</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <div>
-                        <button type="button" class="btn btn-success me-2"><i class="fas fa-check me-1"></i>Accept</button>
-                        <button type="button" class="btn btn-danger"><i class="fas fa-times me-1"></i>Reject</button>
-                    </div>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search Script -->
-    <script>
-    function searchTable(inputId, tbodyId) {
-        var filter = document.getElementById(inputId).value.toUpperCase();
-        var rows = document.getElementById(tbodyId).getElementsByTagName('tr');
-        for (var i = 0; i < rows.length; i++) {
-            var text = rows[i].textContent || rows[i].innerText;
-            rows[i].style.display = text.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
-        }
-    }
-    </script>
-
-<%@ include file="components/adminFooter.jsp" %>
+        </main>
+        <%@ include file="components/adminFooter.jsp" %>

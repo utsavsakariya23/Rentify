@@ -242,64 +242,107 @@
 
                                 <div class="tab-content">
                                     <div class="tab-pane fade show active" id="upcoming">
+                                        <c:if test="${empty upcomingBookings}">
+                                            <div class="text-center py-4">
+                                                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                                <p class="text-muted">You have no upcoming bookings.</p>
+                                                <a href="${pageContext.request.contextPath}/vehicles" class="btn btn-outline-primary mt-2">Browse Cars</a>
+                                            </div>
+                                        </c:if>
+                                        <c:forEach var="booking" items="${upcomingBookings}">
                                         <div class="card mb-3 border bg-light">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
-                                                        <h6 class="fw-bold mb-1">Toyota Corolla</h6>
-                                                        <small class="text-muted">Booking ID: #RENT-12345</small>
+                                                        <h6 class="fw-bold mb-1">${booking.carBrand} ${booking.carName}</h6>
+                                                        <small class="text-muted">Booking #RENT-${booking.bookingId}</small>
                                                     </div>
-                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <div>
+                                                        <c:choose>
+                                                            <c:when test="${booking.bookingStatus == 'Pending'}"><span class="badge bg-warning text-dark me-2">Pending</span></c:when>
+                                                            <c:when test="${booking.bookingStatus == 'Confirmed'}"><span class="badge bg-success me-2">Confirmed</span></c:when>
+                                                            <c:otherwise><span class="badge bg-secondary me-2">${booking.bookingStatus}</span></c:otherwise>
+                                                        </c:choose>
+                                                        
+                                                        <c:choose>
+                                                            <c:when test="${booking.paymentStatus == 'Paid'}"><span class="badge bg-primary"><i class="fas fa-check-circle me-1"></i>Paid</span></c:when>
+                                                            <c:otherwise><span class="badge bg-secondary">Unpaid</span></c:otherwise>
+                                                        </c:choose>
+                                                    </div>
                                                 </div>
                                                 <hr>
                                                 <div class="row text-center text-md-start">
                                                     <div class="col-md-4">
                                                         <small class="text-muted d-block">Pick-Up</small>
-                                                        <strong>Feb 20, 2026</strong>
+                                                        <strong>${booking.startDate}</strong>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <small class="text-muted d-block">Drop-Off</small>
-                                                        <strong>Feb 22, 2026</strong>
+                                                        <strong>${booking.endDate}</strong>
                                                     </div>
                                                     <div class="col-md-4 text-md-end">
                                                         <small class="text-muted d-block">Total</small>
-                                                        <strong class="text-primary">Rs. 10,000</strong>
+                                                        <strong class="text-primary">Rs. ${booking.finalPrice}</strong>
                                                     </div>
+                                                </div>
+                                                <div class="mt-2 text-muted small">
+                                                    Payment Method: <span class="fw-bold">${empty booking.paymentMethod ? 'Cash' : booking.paymentMethod}</span>
+                                                    <c:if test="${not empty booking.transactionId}"> | Txn ID: ${booking.transactionId}</c:if>
                                                 </div>
                                             </div>
                                         </div>
+                                        </c:forEach>
                                     </div>
 
                                     <div class="tab-pane fade" id="past">
-                                        <div class="card mb-3 border bg-light">
+                                        <c:if test="${empty pastBookings}">
+                                            <div class="text-center py-4">
+                                                <p class="text-muted">No past bookings found.</p>
+                                            </div>
+                                        </c:if>
+                                        <c:forEach var="booking" items="${pastBookings}">
+                                        <div class="card mb-3 border bg-light opacity-75">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
-                                                        <h6 class="fw-bold mb-1">Honda Civic</h6>
-                                                        <small class="text-muted">Booking ID: #RENT-09876</small>
+                                                        <h6 class="fw-bold mb-1">${booking.carBrand} ${booking.carName}</h6>
+                                                        <small class="text-muted">Booking #RENT-${booking.bookingId}</small>
                                                     </div>
-                                                    <span class="badge bg-success">Completed</span>
+                                                    <div>
+                                                        <c:choose>
+                                                            <c:when test="${booking.bookingStatus == 'Completed'}"><span class="badge bg-success me-2">Completed</span></c:when>
+                                                            <c:when test="${booking.bookingStatus == 'Cancelled'}"><span class="badge bg-danger me-2">Cancelled</span></c:when>
+                                                            <c:otherwise><span class="badge bg-secondary me-2">${booking.bookingStatus}</span></c:otherwise>
+                                                        </c:choose>
+                                                        <span class="badge bg-secondary">${booking.paymentStatus}</span>
+                                                    </div>
                                                 </div>
                                                 <hr>
                                                 <div class="row text-center text-md-start">
                                                     <div class="col-md-4">
                                                         <small class="text-muted d-block">Pick-Up</small>
-                                                        <strong>Jan 15, 2026</strong>
+                                                        <strong>${booking.startDate}</strong>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <small class="text-muted d-block">Drop-Off</small>
-                                                        <strong>Jan 18, 2026</strong>
+                                                        <strong>${booking.endDate}</strong>
                                                     </div>
                                                     <div class="col-md-4 text-md-end">
                                                         <small class="text-muted d-block">Total</small>
-                                                        <strong class="text-primary">Rs. 19,500</strong>
+                                                        <strong class="text-primary">Rs. ${booking.finalPrice}</strong>
                                                     </div>
                                                 </div>
-                                                <div class="text-end mt-2">
-                                                    <button class="btn btn-sm btn-outline-secondary">Write Review</button>
+                                                
+                                                <c:if test="${requestScope['canReview_' += booking.bookingId]}">
+                                                <div class="text-end mt-3">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="openReviewModal('${booking.bookingId}', '${booking.carId}', '${booking.carName}')">
+                                                        <i class="fas fa-star me-1"></i> Write Review
+                                                    </button>
                                                 </div>
+                                                </c:if>
                                             </div>
                                         </div>
+                                        </c:forEach>
                                     </div>
                                 </div>
                             </div>

@@ -16,6 +16,7 @@ public class User {
     private String password;
     private String licenseNo;
     private String role;
+    private boolean isVerified;
     private Timestamp createdAt;
 
     // Default constructor
@@ -30,6 +31,7 @@ public class User {
         this.password = password;
         this.licenseNo = licenseNo;
         this.role = "Customer";
+        this.isVerified = false;
     }
 
     // Getters and Setters
@@ -57,11 +59,14 @@ public class User {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
+    public boolean isVerified() { return isVerified; }
+    public void setVerified(boolean verified) { this.isVerified = verified; }
+
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 
     @Override
     public String toString() {
-        return "User{userId=" + userId + ", username='" + username + "', role='" + role + "'}";
+        return "User{userId=" + userId + ", username='" + username + "', role='" + role + "', verified=" + isVerified + "}";
     }
 }

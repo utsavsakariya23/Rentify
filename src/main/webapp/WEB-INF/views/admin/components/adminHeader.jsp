@@ -17,6 +17,17 @@
 
     <body class="bg-light">
 
+        <!-- Global Loading Overlay -->
+        <div id="globalLoader" class="global-loader" style="display: none;">
+            <div class="loader-content">
+                <div class="car-loader">
+                    <i class="fas fa-car-side loader-car"></i>
+                    <div class="loader-road"></div>
+                </div>
+                <p class="loader-text">Loading...</p>
+            </div>
+        </div>
+
         <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
