@@ -34,7 +34,7 @@
                                     </div>
                                 </div>
 
-                                <form action="${pageContext.request.contextPath}/book_car" method="post" id="bookingForm">
+                                <form action="${pageContext.request.contextPath}/book_car" method="post" id="bookingForm" class="needs-validation" novalidate>
                                     <input type="hidden" name="carId" value="${car.carId}">
 
                                     <div class="row g-3">
@@ -42,18 +42,22 @@
                                             <label class="form-label fw-bold">Pickup Date</label>
                                             <input type="date" class="form-control" name="startDate" id="startDate" required
                                                    min="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) %>">
+                                            <div class="invalid-feedback">Please select a valid pickup date.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Return Date</label>
                                             <input type="date" class="form-control" name="endDate" id="endDate" required>
+                                            <div class="invalid-feedback">Please select a valid return date.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Pickup Location</label>
-                                            <input type="text" class="form-control" name="pickupLocation" placeholder="Enter pickup location" required>
+                                            <input type="text" class="form-control" name="pickupLocation" placeholder="Enter pickup location" minlength="3" maxlength="100" required>
+                                            <div class="invalid-feedback">Pickup location must be between 3 and 100 characters.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Drop Location</label>
-                                            <input type="text" class="form-control" name="dropLocation" placeholder="Enter drop location" required>
+                                            <input type="text" class="form-control" name="dropLocation" placeholder="Enter drop location" minlength="3" maxlength="100" required>
+                                            <div class="invalid-feedback">Drop location must be between 3 and 100 characters.</div>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label fw-bold">Coupon Code (Optional)</label>
@@ -195,6 +199,13 @@
             if (bookingForm) {
                 bookingForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    
+                    if (!this.checkValidity()) {
+                        e.stopPropagation();
+                        this.classList.add('was-validated');
+                        return;
+                    }
+                    this.classList.add('was-validated');
                     
                     const startDate = document.getElementById('startDate').value;
                     const endDate = document.getElementById('endDate').value;

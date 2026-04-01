@@ -17,7 +17,7 @@ public class EmailService {
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
     private static final String SMTP_USERNAME = "utsavsakariya05@gmail.com";
-    private static final String SMTP_PASSWORD = "lsvq cmhx grwf pamr";
+    private static final String SMTP_PASSWORD = "hagjxnnclseqjdwn";
     private static final String FROM_NAME = "Carent Car Rental";
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(3);
@@ -28,6 +28,8 @@ public class EmailService {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", SMTP_HOST);
         props.put("mail.smtp.port", String.valueOf(SMTP_PORT));
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
 
         return Session.getInstance(props, new Authenticator() {
             @Override

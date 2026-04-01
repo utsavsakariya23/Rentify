@@ -143,13 +143,25 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header"><h5 class="modal-title">Add New Vehicle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <form action="${pageContext.request.contextPath}/admin/add_car" method="post">
+                        <form action="${pageContext.request.contextPath}/admin/add_car" method="post" class="needs-validation" novalidate>
                             <div class="modal-body">
-                                <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" name="name" placeholder="e.g. Toyota Corolla" required></div>
-                                <div class="mb-3"><label class="form-label">Brand</label><input type="text" class="form-control" name="brand" placeholder="e.g. Toyota" required></div>
-                                <div class="mb-3"><label class="form-label">Price/Day (Rs.)</label><input type="number" class="form-control" name="pricePerDay" step="0.01" required></div>
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" name="name" placeholder="e.g. Toyota Corolla" minlength="2" maxlength="50" required>
+                                    <div class="invalid-feedback">Please enter a valid vehicle name (2-50 characters).</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Brand</label>
+                                    <input type="text" class="form-control" name="brand" placeholder="e.g. Toyota" minlength="2" maxlength="30" required>
+                                    <div class="invalid-feedback">Please enter a valid brand name.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Price/Day (Rs.)</label>
+                                    <input type="number" class="form-control" name="pricePerDay" step="0.01" min="1" required>
+                                    <div class="invalid-feedback">Price must be greater than 0.</div>
+                                </div>
                                 <div class="mb-3"><label class="form-label">Fuel Type</label>
-                                    <select class="form-select" name="fuelType">
+                                    <select class="form-select" name="fuelType" required>
                                         <option value="Petrol">Petrol</option>
                                         <option value="Diesel">Diesel</option>
                                         <option value="Electric">Electric</option>
@@ -157,12 +169,16 @@
                                     </select>
                                 </div>
                                 <div class="mb-3"><label class="form-label">Transmission</label>
-                                    <select class="form-select" name="transmission">
+                                    <select class="form-select" name="transmission" required>
                                         <option value="Automatic">Automatic</option>
                                         <option value="Manual">Manual</option>
                                     </select>
                                 </div>
-                                <div class="mb-3"><label class="form-label">Image URL</label><input type="text" class="form-control" name="imageUrl" placeholder="https://..."></div>
+                                <div class="mb-3">
+                                    <label class="form-label">Image URL</label>
+                                    <input type="url" class="form-control" name="imageUrl" placeholder="https://..." required>
+                                    <div class="invalid-feedback">Please enter a valid image URL.</div>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -172,6 +188,22 @@
                     </div>
                 </div>
             </div>
-            </div>
+
+            <script>
+                (function () {
+                    'use strict'
+                    var forms = document.querySelectorAll('.needs-validation')
+                    Array.prototype.slice.call(forms)
+                        .forEach(function (form) {
+                            form.addEventListener('submit', function (event) {
+                                if (!form.checkValidity()) {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                }
+                                form.classList.add('was-validated')
+                            }, false)
+                        })
+                })()
+            </script>
 
         <%@ include file="components/adminFooter.jsp" %>

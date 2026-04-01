@@ -74,12 +74,13 @@
 
                                 <% com.carent.model.User profileUser = (com.carent.model.User) session.getAttribute("loggedUser"); %>
 
-                                <form id="updateProfileForm" action="${pageContext.request.contextPath}/update_profile" method="post">
+                                <form id="updateProfileForm" action="${pageContext.request.contextPath}/update_profile" method="post" class="needs-validation" novalidate>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">FULL NAME</label>
                                             <input type="text" class="form-control" name="fullName"
-                                                value="<%= profileUser != null ? profileUser.getFullName() : "" %>" required>
+                                                value="<%= profileUser != null ? profileUser.getFullName() : "" %>" required minlength="2" maxlength="50" pattern="^[a-zA-Z\s]+$">
+                                            <div class="invalid-feedback">Please enter a valid full name.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">EMAIL <span class="text-muted">(cannot change)</span></label>
@@ -89,7 +90,8 @@
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">PHONE</label>
                                             <input type="tel" class="form-control" name="phone"
-                                                value="<%= profileUser != null ? profileUser.getPhone() : "" %>" required>
+                                                value="<%= profileUser != null ? profileUser.getPhone() : "" %>" required pattern="^[0-9]{10}$">
+                                            <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">USERNAME <span class="text-muted">(cannot change)</span></label>
@@ -99,7 +101,8 @@
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">LICENSE NO</label>
                                             <input type="text" class="form-control" name="licenseNo"
-                                                value="<%= profileUser != null ? profileUser.getLicenseNo() : "" %>">
+                                                value="<%= profileUser != null ? profileUser.getLicenseNo() : "" %>" minlength="5" maxlength="20">
+                                            <div class="invalid-feedback">Please enter a valid license number.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">ROLE</label>
@@ -142,22 +145,25 @@
                                 </div>
                                 <% } %>
 
-                                <form id="userChangePasswordForm" action="${pageContext.request.contextPath}/change_password" method="post">
+                                <form id="userChangePasswordForm" action="${pageContext.request.contextPath}/change_password" method="post" class="needs-validation" novalidate>
                                     <div class="row g-3">
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">CURRENT PASSWORD</label>
                                             <input type="password" class="form-control" name="currentPassword" 
-                                                placeholder="Enter current password" required>
+                                                placeholder="Enter current password" required minlength="8">
+                                            <div class="invalid-feedback">Current password is required.</div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">NEW PASSWORD</label>
-                                            <input type="password" class="form-control" name="newPassword"
-                                                placeholder="Enter new password" required>
+                                            <input type="password" class="form-control" name="newPassword" id="newPassword"
+                                                placeholder="Enter new password" required minlength="8">
+                                            <div class="invalid-feedback">Password must be at least 8 characters.</div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">CONFIRM NEW PASSWORD</label>
-                                            <input type="password" class="form-control" name="confirmNewPassword"
-                                                placeholder="Confirm new password" required>
+                                            <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword"
+                                                placeholder="Confirm new password" required minlength="8">
+                                            <div class="invalid-feedback">Passwords must match and be at least 8 characters.</div>
                                         </div>
                                     </div>
                                     <button type="submit" class="btn btn-outline-primary mt-4">
@@ -379,5 +385,23 @@
             </div>
         </main>
 
+        <script>
+            // Password match validation
+            const pwdForm = document.getElementById('userChangePasswordForm');
+            if (pwdForm) {
+                pwdForm.addEventListener('submit', function(e) {
+                    const newPwd = document.getElementById('newPassword').value;
+                    const cnfPwd = document.getElementById('confirmNewPassword').value;
+                    const cnfInput = document.getElementById('confirmNewPassword');
+                    if (newPwd !== cnfPwd) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        cnfInput.setCustomValidity('Passwords do not match');
+                    } else {
+                        cnfInput.setCustomValidity('');
+                    }
+                });
+            }
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/validation.js"></script>
         <%@ include file="components/footer.jsp" %>

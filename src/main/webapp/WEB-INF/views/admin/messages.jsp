@@ -37,38 +37,12 @@
                                         </c:if>
                                     </td>
                                 </tr>
-                                <!-- View Modal -->
-                                <div class="modal fade" id="viewMsg${m.messageId}" tabindex="-1">
-                                    <div class="modal-dialog"><div class="modal-content">
-                                        <div class="modal-header"><h5 class="modal-title">Message from ${m.name}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                        <div class="modal-body">
-                                            <p><strong>Subject:</strong> ${m.subject}</p>
-                                            <p><strong>Email:</strong> ${m.email}</p>
-                                            <hr>
-                                            <p>${m.message}</p>
-                                            <c:if test="${not empty m.reply}"><hr><p class="text-success"><strong>Reply:</strong> ${m.reply}</p></c:if>
-                                        </div>
-                                    </div></div>
-                                </div>
-                                <!-- Reply Modal -->
-                                <div class="modal fade" id="replyMsg${m.messageId}" tabindex="-1">
-                                    <div class="modal-dialog"><div class="modal-content">
-                                        <div class="modal-header"><h5 class="modal-title">Reply to ${m.name}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                        <form action="${pageContext.request.contextPath}/admin/reply_message" method="post">
-                                            <div class="modal-body">
-                                                <input type="hidden" name="messageId" value="${m.messageId}">
-                                                <p class="text-muted small">Original: ${m.message}</p>
-                                                <div class="mb-3"><label class="form-label">Your Reply</label><textarea class="form-control" name="reply" rows="4" placeholder="Type your reply..." required></textarea></div>
-                                            </div>
-                                            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success">Send Reply</button></div>
-                                        </form>
-                                    </div></div>
-                                </div>
                             </c:forEach>
                             <c:if test="${empty messages}"><tr><td colspan="8" class="text-center text-muted py-4">No messages</td></tr></c:if>
                         </tbody>
                     </table>
                 </div>
+
                 <c:if test="${totalPages > 1}">
                     <nav class="mt-3"><ul class="pagination justify-content-center">
                         <c:forEach begin="1" end="${totalPages}" var="i">
@@ -78,4 +52,61 @@
                 </c:if>
             </div>
         </main>
+
+        <!-- Modals rendered outside the main container to prevent z-index/Bootstrap rendering bugs -->
+        <c:forEach var="m" items="${messages}">
+            <!-- View Modal -->
+            <div class="modal fade" id="viewMsg${m.messageId}" tabindex="-1">
+                <div class="modal-dialog"><div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Message from ${m.name}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">
+                        <p><strong>Subject:</strong> ${m.subject}</p>
+                        <p><strong>Email:</strong> ${m.email}</p>
+                        <hr>
+                        <p>${m.message}</p>
+                        <c:if test="${not empty m.reply}"><hr><p class="text-success"><strong>Reply:</strong> ${m.reply}</p></c:if>
+                    </div>
+                </div></div>
+            </div>
+            <!-- Reply Modal -->
+            <c:if test="${m.status != 'Replied'}">
+                <div class="modal fade" id="replyMsg${m.messageId}" tabindex="-1">
+                    <div class="modal-dialog"><div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title">Reply to ${m.name}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <form action="${pageContext.request.contextPath}/admin/reply_message" method="post" class="needs-validation" novalidate>
+                            <div class="modal-body">
+                                <input type="hidden" name="messageId" value="${m.messageId}">
+                                <p class="text-muted small"><strong>Original:</strong> ${m.message}</p>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Your Reply</label>
+                                    <textarea class="form-control" name="reply" rows="4" placeholder="Type your reply..." minlength="10" maxlength="1000" required></textarea>
+                                    <div class="invalid-feedback">Please enter a reply between 10 and 1000 characters.</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Send Reply</button>
+                            </div>
+                        </form>
+                    </div></div>
+                </div>
+            </c:if>
+        </c:forEach>
+
+        <script>
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms)
+                    .forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                            }
+                            form.classList.add('was-validated')
+                        }, false)
+                    })
+            })()
+        </script>
         <%@ include file="components/adminFooter.jsp" %>

@@ -74,15 +74,53 @@
         <div class="modal fade" id="addCouponModal" tabindex="-1">
             <div class="modal-dialog"><div class="modal-content">
                 <div class="modal-header"><h5 class="modal-title">Add Coupon</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <form action="${pageContext.request.contextPath}/admin/add_coupon" method="post">
+                <form action="${pageContext.request.contextPath}/admin/add_coupon" method="post" class="needs-validation" novalidate>
                     <div class="modal-body">
-                        <div class="mb-3"><label class="form-label">Code</label><input type="text" class="form-control" name="code" placeholder="e.g. SAVE20" required></div>
-                        <div class="mb-3"><label class="form-label">Discount %</label><input type="number" class="form-control" name="discountPercentage" step="0.01" min="1" max="100" required></div>
-                        <div class="mb-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiryDate" required></div>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" name="isActive" checked><label class="form-check-label">Active</label></div>
+                        <div class="mb-3">
+                            <label class="form-label">Code</label>
+                            <input type="text" class="form-control" name="code" placeholder="e.g. SAVE20" pattern="^[A-Z0-9]{3,15}$" required>
+                            <div class="invalid-feedback">Code must be 3-15 uppercase alphanumeric characters.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Discount %</label>
+                            <input type="number" class="form-control" name="discountPercentage" step="0.01" min="1" max="100" required>
+                            <div class="invalid-feedback">Discount must be between 1 and 100.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" name="expiryDate" id="addCouponDate" required>
+                            <div class="invalid-feedback">Please select a valid expiry date.</div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="isActive" checked>
+                            <label class="form-check-label">Active</label>
+                        </div>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Add Coupon</button></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Coupon</button>
+                    </div>
                 </form>
             </div></div>
         </div>
+
+        <script>
+            // Set min expiry date to today
+            document.getElementById('addCouponDate').setAttribute('min', new Date().toISOString().split('T')[0]);
+
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms)
+                    .forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                            }
+                            form.classList.add('was-validated')
+                        }, false)
+                    })
+            })()
+        </script>
         <%@ include file="components/adminFooter.jsp" %>
