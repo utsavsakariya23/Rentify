@@ -35,6 +35,11 @@ public class PageController extends HttpServlet {
     @Override
     public void init() throws ServletException {
         System.out.println("--- PageController INITIALIZED ---");
+        try {
+            com.carent.DBDbUpdate.main(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -173,6 +178,11 @@ public class PageController extends HttpServlet {
                 
                 request.setAttribute("upcomingBookings", upcomingBookings);
                 request.setAttribute("pastBookings", pastBookings);
+                
+                // Fetch valid notifications for the user
+                List<Notification> userNotifications = notificationService.getNotificationsByUserId(profileUser.getUserId());
+                request.setAttribute("userNotifications", userNotifications);
+                
                 request.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(request, response);
                 break;
 

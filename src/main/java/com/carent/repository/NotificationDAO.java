@@ -9,11 +9,12 @@ import java.util.List;
 
 public class NotificationDAO {
 
-    public boolean insertNotification(String message) {
-        String sql = "INSERT INTO notifications (message) VALUES (?)";
+    public boolean insertNotification(int userId, String message) {
+        String sql = "INSERT INTO notifications (user_id, message) VALUES (?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, message);
+            ps.setInt(1, userId);
+            ps.setString(2, message);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -29,6 +30,23 @@ public class NotificationDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 notifications.add(mapResultSetToNotification(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return notifications;
+    }
+
+    public List<Notification> getNotificationsByUserId(int userId) {
+        List<Notification> notifications = new ArrayList<>();
+        String sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    notifications.add(mapResultSetToNotification(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -98,6 +116,7 @@ public class NotificationDAO {
     private Notification mapResultSetToNotification(ResultSet rs) throws SQLException {
         Notification n = new Notification();
         n.setNotificationId(rs.getInt("notification_id"));
+        n.setUserId(rs.getInt("user_id"));
         n.setMessage(rs.getString("message"));
         n.setCreatedAt(rs.getTimestamp("created_at"));
         return n;

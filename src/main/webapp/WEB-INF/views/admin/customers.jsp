@@ -99,6 +99,34 @@
                                         </td>
                                     </tr>
                                     <tr><th class="text-muted">Joined On</th><td><fmt:formatDate value="${u.createdAt}" pattern="dd MMM yyyy, HH:mm" /></td></tr>
+                                    
+                                    <tr><th class="text-muted mt-3 pt-3 border-top" colspan="2"><i class="fas fa-folder-open me-2"></i>Uploaded Documents</th></tr>
+                                    <tr>
+                                        <th class="text-muted align-middle">ID Document</th>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty u.idUrl}">
+                                                    <a href="${u.idUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="fas fa-external-link-alt me-1"></i>View ID</a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="text-danger small"><i class="fas fa-times me-1"></i>Not Uploaded</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted align-middle">License</th>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty u.licenseUrl}">
+                                                    <a href="${u.licenseUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="fas fa-external-link-alt me-1"></i>View License</a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="text-danger small"><i class="fas fa-times me-1"></i>Not Uploaded</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

@@ -59,6 +59,12 @@ public class BookingController extends HttpServlet {
             case "/create_razorpay_order":
                 handleCreateRazorpayOrder(request, response);
                 break;
+            case "/create_razorpay_order_existing":
+                handleCreateRazorpayOrderExisting(request, response);
+                break;
+            case "/confirm_existing_payment":
+                handleConfirmExistingPayment(request, response);
+                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/vehicles");
                 break;
@@ -177,6 +183,69 @@ public class BookingController extends HttpServlet {
             jsonResponse.addProperty("message", "Error calculating amount: " + e.getMessage());
         }
 
+        response.getWriter().write(jsonResponse.toString());
+    }
+
+    private void handleCreateRazorpayOrderExisting(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        JsonObject jsonResponse = new JsonObject();
+        try {
+            int bookingId = Integer.parseInt(request.getParameter("bookingId"));
+            // Fetch booking from db
+            Booking b = bookingService.getBookingsByUser(-1).stream() // Hackish or we can add getBookingById to BookingService
+                            .filter(book -> book.getBookingId() == bookingId)
+                            .findFirst()
+                            .orElse(null);
+            // Actually, we can just use a DAO or add a getBookingById method to BookingService, but let's assume getBookingsWithPagination will work or just do getBookingByUser since the user is in session.
+            HttpSession session = request.getSession(false);
+            if(session == null || session.getAttribute("loggedUser") == null) throw new Exception("Not logged in");
+            User user = (User) session.getAttribute("loggedUser");
+            b = bookingService.getBookingsByUser(user.getUserId()).stream()
+                    .filter(book -> book.getBookingId() == bookingId)
+                    .findFirst()
+                    .orElseThrow(() -> new Exception("Booking not found."));
+
+            BigDecimal finalPrice = b.getFinalPrice();
+            int amountInPaise = finalPrice.multiply(new BigDecimal(100)).intValue();
+
+            RazorpayClient razorpay = new RazorpayClient(RZP_KEY_ID, RZP_KEY_SECRET);
+            JSONObject orderRequest = new JSONObject();
+            orderRequest.put("amount", amountInPaise);
+            orderRequest.put("currency", "INR");
+            orderRequest.put("receipt", "txn_" + System.currentTimeMillis());
+
+            Order order = razorpay.orders.create(orderRequest);
+
+            jsonResponse.addProperty("success", true);
+            jsonResponse.addProperty("orderId", order.get("id").toString());
+            jsonResponse.addProperty("amount", order.get("amount").toString());
+            jsonResponse.addProperty("currency", order.get("currency").toString());
+            jsonResponse.addProperty("keyId", RZP_KEY_ID);
+        } catch (Exception e) {
+            e.printStackTrace();
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Error calculating amount: " + e.getMessage());
+        }
+        response.getWriter().write(jsonResponse.toString());
+    }
+
+    private void handleConfirmExistingPayment(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        JsonObject jsonResponse = new JsonObject();
+        try {
+            int bookingId = Integer.parseInt(request.getParameter("bookingId"));
+            String transactionId = request.getParameter("razorpay_payment_id");
+            bookingService.updatePaymentDetails(bookingId, "Paid", transactionId);
+            
+            jsonResponse.addProperty("success", true);
+            jsonResponse.addProperty("message", "Payment Successful!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Error confirming payment: " + e.getMessage());
+        }
         response.getWriter().write(jsonResponse.toString());
     }
 

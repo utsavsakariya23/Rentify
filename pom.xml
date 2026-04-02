@@ -68,6 +68,12 @@
 		<artifactId>razorpay-java</artifactId>
 		<version>1.4.6</version>
 	</dependency>
+	<!-- org.json for Razorpay -->
+	<dependency>
+		<groupId>org.json</groupId>
+		<artifactId>json</artifactId>
+		<version>20231013</version>
+	</dependency>
 	<!-- Cloudinary SDK -->
 	<dependency>
 		<groupId>com.cloudinary</groupId>

@@ -18,6 +18,8 @@ public class User {
     private String role;
     private boolean isVerified;
     private Timestamp createdAt;
+    private String idUrl;
+    private String licenseUrl;
 
     // Default constructor
     public User() {}
@@ -69,4 +71,10 @@ public class User {
     public String toString() {
         return "User{userId=" + userId + ", username='" + username + "', role='" + role + "', verified=" + isVerified + "}";
     }
+
+    public String getIdUrl() { return idUrl; }
+    public void setIdUrl(String idUrl) { this.idUrl = idUrl; }
+
+    public String getLicenseUrl() { return licenseUrl; }
+    public void setLicenseUrl(String licenseUrl) { this.licenseUrl = licenseUrl; }
 }

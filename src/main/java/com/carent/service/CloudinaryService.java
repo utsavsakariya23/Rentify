@@ -37,7 +37,7 @@ public class CloudinaryService {
                     inputStream.readAllBytes(),
                     ObjectUtils.asMap(
                             "folder", "carent/" + folder,
-                            "resource_type", "image"));
+                            "resource_type", "auto"));
             return (String) uploadResult.get("secure_url");
         } catch (Exception e) {
             System.err.println("Cloudinary upload failed: " + e.getMessage());
@@ -55,7 +55,7 @@ public class CloudinaryService {
                     imageBytes,
                     ObjectUtils.asMap(
                             "folder", "carent/" + folder,
-                            "resource_type", "image"));
+                            "resource_type", "auto"));
             return (String) uploadResult.get("secure_url");
         } catch (Exception e) {
             System.err.println("Cloudinary upload failed: " + e.getMessage());

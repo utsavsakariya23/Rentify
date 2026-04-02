@@ -84,6 +84,9 @@
                                                     <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i> Cancel</button>
                                                 </form>
                                             </c:if>
+                                            <c:if test="${(b.bookingStatus == 'Pending' || b.bookingStatus == 'Confirmed') && b.paymentStatus == 'Unpaid'}">
+                                                <button class="btn btn-sm btn-outline-success" onclick="payNow(${b.bookingId}, '${sessionScope.loggedUser.fullName}', '${sessionScope.loggedUser.email}', '${sessionScope.loggedUser.phone}')"><i class="fas fa-credit-card"></i> Pay Now</button>
+                                            </c:if>
                                             <c:if test="${requestScope['canReview_'.concat(b.bookingId)]}">
                                                 <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#reviewModal${b.bookingId}">
                                                     <i class="fas fa-star"></i> Review
@@ -151,5 +154,70 @@
             .star-rating label:hover,
             .star-rating label:hover ~ label { color: #ffc107; }
         </style>
+
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+            const ctx = '${pageContext.request.contextPath}';
+            function payNow(bookingId, name, email, contact) {
+                if (typeof showGlobalLoader === 'function') showGlobalLoader();
+                fetch(ctx + '/create_razorpay_order_existing', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'bookingId=' + bookingId
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+                    if (!data.success) {
+                        alert(data.message || 'Failed to initialize payment');
+                        return;
+                    }
+                    var options = {
+                        "key": data.keyId,
+                        "amount": data.amount,
+                        "currency": data.currency,
+                        "name": "Carent - Car Rental",
+                        "description": "Booking Payment",
+                        "order_id": data.orderId,
+                        "handler": function (response) {
+                            if (typeof showGlobalLoader === 'function') showGlobalLoader();
+                            fetch(ctx + '/confirm_existing_payment', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                body: 'bookingId=' + bookingId + '&razorpay_payment_id=' + response.razorpay_payment_id
+                            })
+                            .then(r => r.json())
+                            .then(rData => {
+                                if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+                                if(rData.success) {
+                                    alert("Payment Successful!");
+                                    window.location.reload();
+                                } else {
+                                    alert(rData.message);
+                                }
+                            });
+                        },
+                        "prefill": {
+                            "name": name,
+                            "email": email,
+                            "contact": contact
+                        },
+                        "theme": {
+                            "color": "#0d6efd"
+                        }
+                    };
+                    var rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', function (r){
+                        alert('Payment Failed: ' + r.error.description);
+                    });
+                    rzp.open();
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+                    alert('Error connecting to payment gateway.');
+                });
+            }
+        </script>
 
     <%@ include file="components/footer.jsp" %>

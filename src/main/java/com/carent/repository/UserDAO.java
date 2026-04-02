@@ -13,6 +13,19 @@ import java.util.List;
  */
 public class UserDAO {
 
+    static {
+        // Ensure new columns exist
+        String alterSql1 = "ALTER TABLE users ADD COLUMN id_url text";
+        String alterSql2 = "ALTER TABLE users ADD COLUMN license_url text";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            try { stmt.execute(alterSql1); } catch (Exception ignored) {}
+            try { stmt.execute(alterSql2); } catch (Exception ignored) {}
+        } catch (SQLException e) {
+            System.err.println("Failed to alter users table: " + e.getMessage());
+        }
+    }
+
     public User getUserByUsernameAndPassword(String identifier, String password) {
         String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -91,8 +104,8 @@ public class UserDAO {
     }
 
     public String insertUser(User user) {
-        String sql = "INSERT INTO users (full_name, email, phone, username, password, license_no, role, is_verified) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (full_name, email, phone, username, password, license_no, role, is_verified, id_url, license_url) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getFullName());
@@ -103,6 +116,8 @@ public class UserDAO {
             ps.setString(6, user.getLicenseNo());
             ps.setString(7, user.getRole() != null ? user.getRole() : "Customer");
             ps.setBoolean(8, user.isVerified());
+            ps.setString(9, user.getIdUrl());
+            ps.setString(10, user.getLicenseUrl());
             int rows = ps.executeUpdate();
             if (rows > 0) return null;
             return "No rows inserted";
@@ -181,6 +196,20 @@ public class UserDAO {
             ps.setString(4, user.getLicenseNo());
             ps.setString(5, user.getRole());
             ps.setInt(6, user.getUserId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updateUserDocuments(int userId, String idUrl, String licenseUrl) {
+        String sql = "UPDATE users SET id_url = ?, license_url = ? WHERE user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, idUrl);
+            ps.setString(2, licenseUrl);
+            ps.setInt(3, userId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -268,6 +297,8 @@ public class UserDAO {
         user.setRole(rs.getString("role"));
         user.setVerified(rs.getBoolean("is_verified"));
         user.setCreatedAt(rs.getTimestamp("created_at"));
+        user.setIdUrl(rs.getString("id_url"));
+        user.setLicenseUrl(rs.getString("license_url"));
         return user;
     }
 }

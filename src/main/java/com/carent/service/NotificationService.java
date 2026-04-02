@@ -10,11 +10,13 @@ public class NotificationService {
     private final NotificationDAO notificationDAO = new NotificationDAO();
     private final UserDAO userDAO = new UserDAO();
 
-    /**
-     * Send notification: save to DB + optionally email all customers.
-     */
     public boolean sendNotification(String message, boolean sendEmail) {
-        boolean saved = notificationDAO.insertNotification(message);
+        boolean saved = false;
+        List<com.carent.model.User> allUsers = userDAO.getAllUsers();
+        for (com.carent.model.User u : allUsers) {
+            saved = notificationDAO.insertNotification(u.getUserId(), message) || saved;
+        }
+
         if (saved && sendEmail) {
             // Send email to all customers asynchronously
             List<String> emails = userDAO.getAllCustomerEmails();
@@ -28,6 +30,10 @@ public class NotificationService {
 
     public List<Notification> getAllNotifications() {
         return notificationDAO.getAllNotifications();
+    }
+
+    public List<Notification> getNotificationsByUserId(int userId) {
+        return notificationDAO.getNotificationsByUserId(userId);
     }
 
     public List<Notification> getLatestNotifications(int limit) {

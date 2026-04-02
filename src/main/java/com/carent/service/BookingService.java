@@ -139,6 +139,10 @@ public class BookingService {
         return bookingDAO.updatePaymentStatus(bookingId, "Paid");
     }
 
+    public boolean updatePaymentDetails(int bookingId, String paymentStatus, String transactionId) {
+        return bookingDAO.updatePaymentDetails(bookingId, paymentStatus, transactionId);
+    }
+
     public int getBookingCount() {
         return bookingDAO.getBookingCount();
     }

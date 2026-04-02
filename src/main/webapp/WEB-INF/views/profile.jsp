@@ -41,7 +41,9 @@
                             <a href="#notifications" class="list-group-item list-group-item-action"
                                 data-bs-toggle="list">
                                 <i class="fas fa-bell me-2"></i> Notifications
-                                <span class="badge bg-danger rounded-pill float-end">2</span>
+                                <c:if test="${not empty userNotifications}">
+                                    <span class="badge bg-danger rounded-pill float-end">${userNotifications.size()}</span>
+                                </c:if>
                             </a>
                             <a href="${pageContext.request.contextPath}/logout"
                                 class="list-group-item list-group-item-action text-danger">
@@ -179,56 +181,103 @@
                                 <h4 class="fw-bold mb-2">Document Verification</h4>
                                 <p class="text-muted small mb-4">Upload your documents to verify your identity. You must complete verification before you can book a vehicle.</p>
 
-                                <div class="alert alert-warning d-flex align-items-center" role="alert">
-                                    <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
-                                    <div>
-                                        <strong>Verification Required!</strong> Please upload your ID and driving license to start booking vehicles.
-                                    </div>
-                                </div>
+                                <%
+                                    boolean hasId = profileUser.getIdUrl() != null && !profileUser.getIdUrl().trim().isEmpty();
+                                    boolean hasLicense = profileUser.getLicenseUrl() != null && !profileUser.getLicenseUrl().trim().isEmpty();
+                                    boolean docsVerified = hasId && hasLicense;
+                                %>
 
-                                <div class="row g-4">
-                                    <!-- ID Document -->
-                                    <div class="col-md-6">
-                                        <div class="card border h-100">
-                                            <div class="card-body text-center p-4">
-                                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                                                    style="width:70px;height:70px">
-                                                    <i class="fas fa-id-card fa-2x text-primary"></i>
+                                <c:choose>
+                                    <c:when test="<%= !docsVerified %>">
+                                        <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                            <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>Verification Required!</strong> Please upload your ID and driving license to start booking vehicles.
+                                            </div>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="alert alert-success d-flex align-items-center" role="alert">
+                                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>Verified!</strong> Your documents have been uploaded successfully.
+                                            </div>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+
+                                <div id="uploadAlert" class="alert d-none mt-3"></div>
+
+                                <form id="documentUploadForm" enctype="multipart/form-data">
+                                    <div class="row g-4">
+                                        <!-- ID Document -->
+                                        <div class="col-md-6">
+                                            <div class="card border h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                                        style="width:70px;height:70px">
+                                                        <i class="fas fa-id-card fa-2x text-primary"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold">Government ID</h6>
+                                                    <p class="text-muted small">Upload your Aadhar Card, PAN Card, or Passport</p>
+                                                    
+                                                    <% if (hasId) { %>
+                                                        <span class="badge bg-success mb-3"><i class="fas fa-check me-1"></i>Uploaded</span>
+                                                        <div class="mt-2 text-center">
+                                                            <a href="<%= profileUser.getIdUrl() %>" target="_blank" class="btn btn-sm btn-outline-info">View Document</a>
+                                                        </div>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary mb-3"><i class="fas fa-clock me-1"></i>Not Uploaded</span>
+                                                        <div>
+                                                            <input type="file" class="form-control form-control-sm" id="idFile" name="idFile" accept="image/*,.pdf">
+                                                        </div>
+                                                    <% } %>
                                                 </div>
-                                                <h6 class="fw-bold">Government ID</h6>
-                                                <p class="text-muted small">Upload your Aadhar Card, PAN Card, or Passport</p>
-                                                <span class="badge bg-secondary mb-3"><i class="fas fa-clock me-1"></i>Not Uploaded</span>
-                                                <div>
-                                                    <input type="file" class="form-control form-control-sm" id="idFile" accept="image/*,.pdf">
+                                            </div>
+                                        </div>
+
+                                        <!-- Driving License -->
+                                        <div class="col-md-6">
+                                            <div class="card border h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                                        style="width:70px;height:70px">
+                                                        <i class="far fa-id-badge fa-2x text-primary"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold">Driving License</h6>
+                                                    <p class="text-muted small">Upload front side of your valid driving license</p>
+                                                    
+                                                    <% if (hasLicense) { %>
+                                                        <span class="badge bg-success mb-3"><i class="fas fa-check me-1"></i>Uploaded</span>
+                                                        <div class="mt-2 text-center">
+                                                            <a href="<%= profileUser.getLicenseUrl() %>" target="_blank" class="btn btn-sm btn-outline-info">View Document</a>
+                                                        </div>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary mb-3"><i class="fas fa-clock me-1"></i>Not Uploaded</span>
+                                                        <div>
+                                                            <input type="file" class="form-control form-control-sm" id="licenseFile" name="licenseFile" accept="image/*,.pdf">
+                                                        </div>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Driving License -->
-                                    <div class="col-md-6">
-                                        <div class="card border h-100">
-                                            <div class="card-body text-center p-4">
-                                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                                                    style="width:70px;height:70px">
-                                                    <i class="far fa-id-badge fa-2x text-primary"></i>
-                                                </div>
-                                                <h6 class="fw-bold">Driving License</h6>
-                                                <p class="text-muted small">Upload front side of your valid driving license</p>
-                                                <span class="badge bg-secondary mb-3"><i class="fas fa-clock me-1"></i>Not Uploaded</span>
-                                                <div>
-                                                    <input type="file" class="form-control form-control-sm" id="licenseFile" accept="image/*,.pdf">
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <% if (!docsVerified) { %>
+                                    <div class="text-end mt-4">
+                                        <button type="button" id="submitDocsBtn" class="btn btn-primary-custom px-4" onclick="uploadDocuments()">
+                                            <i class="fas fa-upload me-2"></i>Submit Documents
+                                        </button>
                                     </div>
-                                </div>
-
-                                <div class="text-end mt-4">
-                                    <button type="button" class="btn btn-primary-custom px-4">
-                                        <i class="fas fa-upload me-2"></i>Submit Documents
-                                    </button>
-                                </div>
+                                    <!-- Progress Indicator -->
+                                    <div id="uploadProgressContainer" class="d-none text-center mt-3">
+                                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                            <span class="visually-hidden">Uploading...</span>
+                                        </div>
+                                        <div id="uploadProgressText" class="mt-2 fw-bold text-primary">0% Uploaded</div>
+                                    </div>
+                                    <% } %>
+                                </form>
                             </div>
                         </div>
 
@@ -278,17 +327,30 @@
                                                 </div>
                                                 <hr>
                                                 <div class="row text-center text-md-start">
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <small class="text-muted d-block">Pick-Up</small>
                                                         <strong>${booking.startDate}</strong>
+                                                        <div class="small text-muted"><i class="fas fa-map-marker-alt text-success"></i> ${booking.pickupLocation}</div>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <small class="text-muted d-block">Drop-Off</small>
                                                         <strong>${booking.endDate}</strong>
+                                                        <div class="small text-muted"><i class="fas fa-map-marker-alt text-danger"></i> ${booking.dropLocation}</div>
                                                     </div>
-                                                    <div class="col-md-4 text-md-end">
+                                                    <div class="col-md-3 text-md-end">
                                                         <small class="text-muted d-block">Total</small>
                                                         <strong class="text-primary">Rs. ${booking.finalPrice}</strong>
+                                                    </div>
+                                                    <div class="col-md-3 text-md-end">
+                                                        <c:if test="${(booking.bookingStatus == 'Pending' || booking.bookingStatus == 'Confirmed') && booking.paymentStatus == 'Unpaid'}">
+                                                            <button class="btn btn-sm btn-outline-success mt-2" onclick="payNow(${booking.bookingId}, '${sessionScope.loggedUser.fullName}', '${sessionScope.loggedUser.email}', '${sessionScope.loggedUser.phone}')"><i class="fas fa-credit-card"></i> Pay Now</button>
+                                                        </c:if>
+                                                        <c:if test="${booking.bookingStatus == 'Pending' || booking.bookingStatus == 'Confirmed'}">
+                                                            <form action="${pageContext.request.contextPath}/cancel_booking" method="post" class="mt-2" onsubmit="return confirm('Cancel this booking?');">
+                                                                <input type="hidden" name="bookingId" value="${booking.bookingId}">
+                                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i> Cancel</button>
+                                                            </form>
+                                                        </c:if>
                                                     </div>
                                                 </div>
                                                 <div class="mt-2 text-muted small">
@@ -328,10 +390,12 @@
                                                     <div class="col-md-4">
                                                         <small class="text-muted d-block">Pick-Up</small>
                                                         <strong>${booking.startDate}</strong>
+                                                        <div class="small text-muted"><i class="fas fa-map-marker-alt text-success"></i> ${booking.pickupLocation}</div>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <small class="text-muted d-block">Drop-Off</small>
                                                         <strong>${booking.endDate}</strong>
+                                                        <div class="small text-muted"><i class="fas fa-map-marker-alt text-danger"></i> ${booking.dropLocation}</div>
                                                     </div>
                                                     <div class="col-md-4 text-md-end">
                                                         <small class="text-muted d-block">Total</small>
@@ -359,24 +423,26 @@
                             <div class="card card-modern p-4">
                                 <h4 class="fw-bold mb-4">Notifications</h4>
                                 <div class="list-group list-group-flush">
-                                    <a href="#"
-                                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="fas fa-check-circle text-success me-2"></i>
-                                            <strong>Booking Confirmed</strong>
-                                            <p class="mb-0 small text-muted">Your booking #RENT-09876 has been confirmed.</p>
-                                        </div>
-                                        <small class="text-muted">2 days ago</small>
-                                    </a>
-                                    <a href="#"
-                                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="fas fa-tag text-primary me-2"></i>
-                                            <strong>New Promo!</strong>
-                                            <p class="mb-0 small text-muted">Use code SAVE10 for 10% off your next rental.</p>
-                                        </div>
-                                        <small class="text-muted">1 week ago</small>
-                                    </a>
+                                    <c:choose>
+                                        <c:when test="${not empty userNotifications}">
+                                            <c:forEach var="notif" items="${userNotifications}">
+                                                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <i class="fas fa-bell text-primary me-2"></i>
+                                                        <strong>Notification</strong>
+                                                        <p class="mb-0 small text-muted">${notif.message}</p>
+                                                    </div>
+                                                    <small class="text-muted">${notif.createdAt}</small>
+                                                </a>
+                                            </c:forEach>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="text-center py-4">
+                                                <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                                                <p class="text-muted">You have no notifications yet.</p>
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                             </div>
                         </div>
@@ -385,6 +451,7 @@
             </div>
         </main>
 
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         <script>
             // Password match validation
             const pwdForm = document.getElementById('userChangePasswordForm');
@@ -401,6 +468,142 @@
                         cnfInput.setCustomValidity('');
                     }
                 });
+            }
+
+            const ctx = '${pageContext.request.contextPath}';
+            
+            function payNow(bookingId, name, email, contact) {
+                if (typeof showGlobalLoader === 'function') showGlobalLoader();
+                fetch(ctx + '/create_razorpay_order_existing', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'bookingId=' + bookingId
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+                    if (!data.success) {
+                        alert(data.message || 'Failed to initialize payment');
+                        return;
+                    }
+                    var options = {
+                        "key": data.keyId,
+                        "amount": data.amount,
+                        "currency": data.currency,
+                        "name": "Carent - Car Rental",
+                        "description": "Booking Payment",
+                        "order_id": data.orderId,
+                        "handler": function (response) {
+                            if (typeof showGlobalLoader === 'function') showGlobalLoader();
+                            fetch(ctx + '/confirm_existing_payment', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                body: 'bookingId=' + bookingId + '&razorpay_payment_id=' + response.razorpay_payment_id
+                            })
+                            .then(r => r.json())
+                            .then(rData => {
+                                if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+                                if(rData.success) {
+                                    alert("Payment Successful!");
+                                    window.location.reload();
+                                } else {
+                                    alert(rData.message);
+                                }
+                            });
+                        },
+                        "prefill": {
+                            "name": name,
+                            "email": email,
+                            "contact": contact
+                        },
+                        "theme": {
+                            "color": "#0d6efd"
+                        }
+                    };
+                    var rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', function (r){
+                        alert('Payment Failed: ' + r.error.description);
+                    });
+                    rzp.open();
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+                    alert('Error connecting to payment gateway.');
+                });
+            }
+
+            // Document Upload AJAX
+            function uploadDocuments() {
+                const idFile = document.getElementById('idFile')?.files[0];
+                const licenseFile = document.getElementById('licenseFile')?.files[0];
+                const alertDiv = document.getElementById('uploadAlert');
+                
+                if (!idFile && !licenseFile) {
+                    alertDiv.className = 'alert alert-danger mt-3';
+                    alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Please select at least one document to upload.';
+                    return;
+                }
+
+                const btn = document.getElementById('submitDocsBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading... Please wait';
+
+                const formData = new FormData();
+                if (idFile) formData.append('idFile', idFile);
+                if (licenseFile) formData.append('licenseFile', licenseFile);
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+                document.getElementById('uploadProgressContainer').classList.remove('d-none');
+                document.getElementById('uploadProgressText').innerText = '0% Uploaded';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '${pageContext.request.contextPath}/upload_documents', true);
+
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        const percentComplete = Math.round((event.loaded / event.total) * 100);
+                        document.getElementById('uploadProgressText').innerText = percentComplete + '% Uploaded';
+                    }
+                };
+
+                xhr.onload = function() {
+                    btn.disabled = false;
+                    document.getElementById('uploadProgressContainer').classList.add('d-none');
+                    if (xhr.status === 200) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                alertDiv.className = 'alert alert-success mt-3';
+                                alertDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                                setTimeout(() => window.location.reload(), 1500);
+                            } else {
+                                btn.innerHTML = '<i class="fas fa-upload me-2"></i>Submit Documents';
+                                alertDiv.className = 'alert alert-danger mt-3';
+                                alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + (data.message || "Upload Failed");
+                            }
+                        } catch(e) {
+                            btn.innerHTML = '<i class="fas fa-upload me-2"></i>Submit Documents';
+                            alertDiv.className = 'alert alert-danger mt-3';
+                            alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Error parsing response.';
+                        }
+                    } else {
+                        btn.innerHTML = '<i class="fas fa-upload me-2"></i>Submit Documents';
+                        alertDiv.className = 'alert alert-danger mt-3';
+                        alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Upload failed.';
+                    }
+                };
+
+                xhr.onerror = function() {
+                    btn.disabled = false;
+                    document.getElementById('uploadProgressContainer').classList.add('d-none');
+                    btn.innerHTML = '<i class="fas fa-upload me-2"></i>Submit Documents';
+                    alertDiv.className = 'alert alert-danger mt-3';
+                    alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Network error occurred. Please try again.';
+                };
+
+                xhr.send(formData);
             }
         </script>
         <script src="${pageContext.request.contextPath}/assets/js/validation.js"></script>

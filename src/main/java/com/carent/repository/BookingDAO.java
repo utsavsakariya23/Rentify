@@ -151,6 +151,20 @@ public class BookingDAO {
         return false;
     }
 
+    public boolean updatePaymentDetails(int bookingId, String status, String transactionId) {
+        String sql = "UPDATE bookings SET payment_status = ?, transaction_id = ? WHERE booking_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, transactionId);
+            ps.setInt(3, bookingId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public boolean cancelBooking(int bookingId) {
         return updateBookingStatus(bookingId, "Cancelled");
     }
