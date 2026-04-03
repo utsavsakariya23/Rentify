@@ -121,6 +121,30 @@
         <servlet-name>PageController</servlet-name>
         <url-pattern>/admin/reviews</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/payments</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/analytics</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/finance</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/fleet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/admin/settings</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PageController</servlet-name>
+        <url-pattern>/invoice</url-pattern>
+    </servlet-mapping>
 
     <!-- ========== Admin Controller (Admin POST actions) ========== -->
     <servlet>
@@ -204,6 +228,28 @@
     <servlet-mapping>
         <servlet-name>AdminController</servlet-name>
         <url-pattern>/admin/change_password</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/refund_payment</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/export_payments_csv</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/update_fleet</url-pattern>
+    </servlet-mapping>
+
+    <!-- ========== Admin AJAX API ========== -->
+    <servlet>
+        <servlet-name>AdminApiServlet</servlet-name>
+        <servlet-class>com.carent.controller.AdminApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminApiServlet</servlet-name>
+        <url-pattern>/admin/api/*</url-pattern>
     </servlet-mapping>
 
     <!-- ========== Booking Controller ========== -->

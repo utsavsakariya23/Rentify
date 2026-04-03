@@ -248,6 +248,69 @@ public class CarDAO {
         return false;
     }
 
+    public List<Car> searchCarsAdmin(String q) {
+        List<Car> cars = new ArrayList<>();
+        String kw = "%" + (q != null ? q.trim().toLowerCase() : "") + "%";
+        String sql = "SELECT * FROM cars WHERE LOWER(name) LIKE ? OR LOWER(brand) LIKE ? OR LOWER(status) LIKE ? ORDER BY created_at DESC LIMIT 50";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, kw); ps.setString(2, kw); ps.setString(3, kw);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) cars.add(mapResultSetToCar(rs));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return cars;
+    }
+
+    public boolean updateFleetInfo(int carId, java.sql.Date lastService, java.sql.Date nextService, java.sql.Date insuranceExpiry, Integer mileage) {
+        String sql = "UPDATE cars SET last_service_date = ?, next_service_date = ?, insurance_expiry = ?, mileage = ? WHERE car_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, lastService);
+            ps.setDate(2, nextService);
+            ps.setDate(3, insuranceExpiry);
+            if (mileage != null) ps.setInt(4, mileage); else ps.setNull(4, Types.INTEGER);
+            ps.setInt(5, carId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); }
+        return false;
+    }
+
+    public List<Car> getAllCarsForFleet() {
+        List<Car> cars = new ArrayList<>();
+        String sql = "SELECT c.*, (SELECT COUNT(*) FROM bookings b WHERE b.car_id = c.car_id) AS total_bookings FROM cars c ORDER BY c.name";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Car car = mapResultSetToCar(rs);
+                try { car.setTotalBookings(rs.getInt("total_bookings")); } catch (SQLException ignored) {}
+                cars.add(car);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return cars;
+    }
+
+    /** Returns top N most booked cars */
+    public List<Car> getTopRentedCars(int limit) {
+        List<Car> cars = new ArrayList<>();
+        String sql = "SELECT c.*, COUNT(b.booking_id) AS total_bookings FROM cars c " +
+                     "LEFT JOIN bookings b ON c.car_id = b.car_id AND b.booking_status != 'Cancelled' " +
+                     "GROUP BY c.car_id ORDER BY total_bookings DESC LIMIT ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Car car = mapResultSetToCar(rs);
+                    car.setTotalBookings(rs.getInt("total_bookings"));
+                    cars.add(car);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return cars;
+    }
+
     private Car mapResultSetToCar(ResultSet rs) throws SQLException {
         Car car = new Car();
         car.setCarId(rs.getInt("car_id"));
@@ -259,6 +322,11 @@ public class CarDAO {
         car.setImageUrl(rs.getString("image_url"));
         car.setStatus(rs.getString("status"));
         car.setCreatedAt(rs.getTimestamp("created_at"));
+        try { car.setLastServiceDate(rs.getDate("last_service_date")); } catch (SQLException ignored) {}
+        try { car.setNextServiceDate(rs.getDate("next_service_date")); } catch (SQLException ignored) {}
+        try { car.setInsuranceExpiry(rs.getDate("insurance_expiry")); } catch (SQLException ignored) {}
+        try { int m = rs.getInt("mileage"); if (!rs.wasNull()) car.setMileage(m); } catch (SQLException ignored) {}
         return car;
     }
 }
+

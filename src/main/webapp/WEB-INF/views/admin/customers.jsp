@@ -6,6 +6,15 @@
         <main class="container-fluid my-5">
             <h2 class="fw-bold mb-4">Manage Customers</h2>
             <div class="card card-modern border-0 p-4">
+                <!-- AJAX Search -->
+                <div class="mb-3 d-flex gap-2 align-items-center">
+                    <div class="input-group" style="max-width: 420px;">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="customerSearch" class="form-control" placeholder="Search name, email, username, phone..." autocomplete="off">
+                        <button class="btn btn-outline-secondary" onclick="document.getElementById('customerSearch').value=''; location.reload();" title="Clear"><i class="fas fa-times"></i></button>
+                    </div>
+                    <span id="custSearchCount" class="text-muted small"></span>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
@@ -137,5 +146,52 @@
                 </div>
             </div>
         </c:forEach>
+
+        <script>
+        (function() {
+            var CUST_CTX = '${pageContext.request.contextPath}';
+            var custTimer;
+            var searchInput = document.getElementById('customerSearch');
+            if (!searchInput) return;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(custTimer);
+                var q = this.value.trim();
+                custTimer = setTimeout(function() {
+                    if (!q) { location.reload(); return; }
+                    fetch(CUST_CTX + '/admin/api/search_customers?q=' + encodeURIComponent(q))
+                      .then(function(r) { return r.json(); })
+                      .then(function(data) {
+                        document.getElementById('custSearchCount').textContent = data.length + ' result(s)';
+                        var tbody = document.getElementById('customerTbody');
+                        if (!tbody) return;
+                        if (!data.length) {
+                            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4">No customers match</td></tr>';
+                            return;
+                        }
+                        var html = '';
+                        for (var i = 0; i < data.length; i++) {
+                            var u = data[i];
+                            var roleBadge = (u.role === 'Admin') ? 'bg-danger' : 'bg-primary';
+                            var verBadge  = u.verified ? 'bg-success' : 'bg-secondary';
+                            var verText   = u.verified ? 'Verified' : 'Unverified';
+                            html += '<tr>'
+                                + '<td>' + u.userId + '</td>'
+                                + '<td class="fw-bold">' + (u.fullName || '') + '</td>'
+                                + '<td>' + (u.email || '') + '</td>'
+                                + '<td>' + (u.phone || '&mdash;') + '</td>'
+                                + '<td>' + (u.username || '') + '</td>'
+                                + '<td><code>' + (u.licenseNo || '&mdash;') + '</code></td>'
+                                + '<td><span class="badge ' + roleBadge + '">' + u.role + '</span></td>'
+                                + '<td><span class="badge ' + verBadge + '">' + verText + '</span></td>'
+                                + '<td>&mdash;</td>'
+                                + '<td><a href="' + CUST_CTX + '/admin/customers" class="btn btn-sm btn-outline-secondary">View</a></td>'
+                                + '</tr>';
+                        }
+                        tbody.innerHTML = html;
+                      }).catch(function() {});
+                }, 300);
+            });
+        })();
+        </script>
 
         <%@ include file="components/adminFooter.jsp" %>

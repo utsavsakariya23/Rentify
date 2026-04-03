@@ -285,6 +285,48 @@ public class UserDAO {
         return emails;
     }
 
+    public List<User> searchCustomers(String q) {
+        List<User> users = new ArrayList<>();
+        String kw = "%" + (q != null ? q.trim().toLowerCase() : "") + "%";
+        String sql = "SELECT * FROM users WHERE role = 'Customer' AND " +
+                     "(LOWER(full_name) LIKE ? OR LOWER(email) LIKE ? OR LOWER(username) LIKE ? OR phone LIKE ?) " +
+                     "ORDER BY created_at DESC LIMIT 50";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, kw); ps.setString(2, kw); ps.setString(3, kw); ps.setString(4, kw);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) users.add(mapResultSetToUser(rs));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return users;
+    }
+
+    /** Top customers by total spend on completed/paid bookings */
+    public List<java.util.Map<String, Object>> getTopCustomers(int limit) {
+        List<java.util.Map<String, Object>> result = new ArrayList<>();
+        String sql = "SELECT u.user_id, u.full_name, u.email, COUNT(b.booking_id) AS booking_count, " +
+                     "COALESCE(SUM(b.final_price),0) AS total_spend " +
+                     "FROM users u LEFT JOIN bookings b ON u.user_id = b.user_id AND b.payment_status = 'Paid' " +
+                     "WHERE u.role = 'Customer' GROUP BY u.user_id, u.full_name, u.email " +
+                     "ORDER BY total_spend DESC LIMIT ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+                    row.put("userId", rs.getInt("user_id"));
+                    row.put("fullName", rs.getString("full_name"));
+                    row.put("email", rs.getString("email"));
+                    row.put("bookingCount", rs.getInt("booking_count"));
+                    row.put("totalSpend", rs.getBigDecimal("total_spend"));
+                    result.add(row);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return result;
+    }
+
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setUserId(rs.getInt("user_id"));
@@ -302,3 +344,4 @@ public class UserDAO {
         return user;
     }
 }
+

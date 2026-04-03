@@ -31,6 +31,8 @@ public class PageController extends HttpServlet {
     private ContactMessageDAO contactMessageDAO = new ContactMessageDAO();
     private OTPService otpService = new OTPService();
     private EmailService emailService = new EmailService();
+    private FinanceService financeService = new FinanceService();
+    private com.carent.repository.CarDAO carDAO = new com.carent.repository.CarDAO();
 
     @Override
     public void init() throws ServletException {
@@ -238,6 +240,8 @@ public class PageController extends HttpServlet {
                 request.setAttribute("totalCars", carService.getCarCount());
                 request.setAttribute("pendingBookings", bookingService.getPendingBookingCount());
                 request.setAttribute("recentBookings", bookingService.getRecentBookings(5));
+                request.setAttribute("overdueBookings", bookingService.getOverdueBookings());
+                request.setAttribute("unreadMessages", contactMessageDAO.getUnreadCount());
                 request.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(request, response);
                 break;
 
@@ -250,21 +254,32 @@ public class PageController extends HttpServlet {
                 request.getRequestDispatcher("/WEB-INF/views/admin/vehicles.jsp").forward(request, response);
                 break;
 
-            case "/admin/rent":
-                List<Booking> adminBookings = bookingService.getBookingsWithPagination(page, PAGE_SIZE);
-                int totalBookings = bookingService.getBookingCount();
+            case "/admin/rent": {
+                String rentFilter = request.getParameter("filter");
+                List<Booking> adminBookings = bookingService.getBookingsByFilter(rentFilter, page, PAGE_SIZE);
+                int totalBookingsFiltered = bookingService.getBookingsByFilterCount(rentFilter);
                 request.setAttribute("bookings", adminBookings);
                 request.setAttribute("currentPage", page);
-                request.setAttribute("totalPages", (int) Math.ceil((double) totalBookings / PAGE_SIZE));
+                request.setAttribute("totalPages", (int) Math.ceil((double) totalBookingsFiltered / PAGE_SIZE));
+                request.setAttribute("pendingCount", bookingService.getPendingBookingCount());
+                request.setAttribute("confirmedCount", bookingService.getBookingsByFilterCount("confirmed"));
                 request.getRequestDispatcher("/WEB-INF/views/admin/rentrequest.jsp").forward(request, response);
                 break;
+            }
 
             case "/admin/payments": {
-                List<Booking> adminPaymentsList = bookingService.getBookingsWithPagination(page, PAGE_SIZE);
-                int adminTotalPaymentsCount = bookingService.getBookingCount();
+                String payStatus = request.getParameter("payStatus");
+                String payMethod = request.getParameter("payMethod");
+                List<Booking> adminPaymentsList = bookingService.getFilteredPayments(payStatus, payMethod, page, PAGE_SIZE);
+                int adminTotalPaymentsCount = bookingService.getFilteredPaymentCount(payStatus, payMethod);
                 request.setAttribute("payments", adminPaymentsList);
                 request.setAttribute("currentPage", page);
                 request.setAttribute("totalPages", (int) Math.ceil((double) adminTotalPaymentsCount / PAGE_SIZE));
+                // KPI stats
+                request.setAttribute("totalRevenue", bookingService.getTotalRevenue());
+                request.setAttribute("paidCount", bookingService.getPaidCount());
+                request.setAttribute("unpaidCount", bookingService.getUnpaidCount());
+                request.setAttribute("onlineCount", bookingService.getOnlinePaymentCount());
                 request.getRequestDispatcher("/WEB-INF/views/admin/payments.jsp").forward(request, response);
                 break;
             }
@@ -306,7 +321,7 @@ public class PageController extends HttpServlet {
                 request.getRequestDispatcher("/WEB-INF/views/admin/profile.jsp").forward(request, response);
                 break;
 
-            case "/admin/reviews":
+            case "/admin/reviews": {
                 List<Review> reviews = reviewService.getReviewsWithPagination(page, PAGE_SIZE);
                 int totalReviews = reviewService.getTotalReviewCount();
                 request.setAttribute("reviews", reviews);
@@ -314,6 +329,65 @@ public class PageController extends HttpServlet {
                 request.setAttribute("totalPages", (int) Math.ceil((double) totalReviews / PAGE_SIZE));
                 request.getRequestDispatcher("/WEB-INF/views/admin/reviews.jsp").forward(request, response);
                 break;
+            }
+
+            // ====== New Feature Routes ======
+            case "/admin/analytics": {
+                request.setAttribute("monthlyRevenue", bookingService.getMonthlyRevenue(12));
+                request.setAttribute("bookingStatusCounts", bookingService.getBookingCountByStatus());
+                request.setAttribute("paymentMethodSplit", bookingService.getPaymentMethodSplit());
+                request.setAttribute("topRentedCars", carDAO.getTopRentedCars(5));
+                request.setAttribute("topCustomers", userDAO.getTopCustomers(5));
+                request.setAttribute("totalRevenue", bookingService.getTotalRevenue());
+                request.setAttribute("totalBookings", bookingService.getBookingCount());
+                request.getRequestDispatcher("/WEB-INF/views/admin/analytics.jsp").forward(request, response);
+                break;
+            }
+
+            case "/admin/finance": {
+                int finYear;
+                try { finYear = Integer.parseInt(request.getParameter("year")); } catch (Exception e) { finYear = java.time.Year.now().getValue(); }
+                request.setAttribute("selectedYear", finYear);
+                request.setAttribute("yearlySummary", financeService.getYearlySummary(finYear));
+                request.setAttribute("quarterlyGST", financeService.getQuarterlyGST(finYear));
+                // Current month statement
+                java.time.LocalDate now = java.time.LocalDate.now();
+                request.setAttribute("currentMonthStmt", financeService.getMonthlyStatement(now.getMonthValue(), now.getYear()));
+                request.setAttribute("currentMonth", now.getMonth().getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH));
+                request.setAttribute("currentYear", now.getYear());
+                request.setAttribute("gstRate", financeService.getGstRate());
+                request.getRequestDispatcher("/WEB-INF/views/admin/finance.jsp").forward(request, response);
+                break;
+            }
+
+            case "/admin/fleet":
+                request.setAttribute("fleetCars", carDAO.getAllCarsForFleet());
+                request.getRequestDispatcher("/WEB-INF/views/admin/fleet.jsp").forward(request, response);
+                break;
+
+            case "/admin/settings":
+                request.getRequestDispatcher("/WEB-INF/views/admin/settings.jsp").forward(request, response);
+                break;
+
+            case "/invoice": {
+                HttpSession invSession = request.getSession(false);
+                if (invSession == null || invSession.getAttribute("loggedUser") == null) {
+                    response.sendRedirect(request.getContextPath() + "/login"); return;
+                }
+                String bidStr = request.getParameter("bookingId");
+                if (bidStr != null) {
+                    try {
+                        Booking inv = bookingService.getBookingById(Integer.parseInt(bidStr));
+                        User invUser = (User) invSession.getAttribute("loggedUser");
+                        // Security: only own booking or admin
+                        if (inv != null && (inv.getUserId() == invUser.getUserId() || "Admin".equalsIgnoreCase(invUser.getRole()))) {
+                            request.setAttribute("booking", inv);
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                request.getRequestDispatcher("/WEB-INF/views/invoice.jsp").forward(request, response);
+                break;
+            }
 
             default:
                 if (action.startsWith("/admin")) {

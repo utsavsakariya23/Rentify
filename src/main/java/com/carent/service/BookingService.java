@@ -143,25 +143,54 @@ public class BookingService {
         return bookingDAO.updatePaymentDetails(bookingId, paymentStatus, transactionId);
     }
 
-    public int getBookingCount() {
-        return bookingDAO.getBookingCount();
+    public boolean refundBooking(int bookingId) {
+        return bookingDAO.refundBooking(bookingId);
     }
 
-    public int getActiveBookingCount() {
-        return bookingDAO.getActiveBookingCount();
+    public List<Booking> getFilteredPayments(String payStatus, String payMethod, int page, int pageSize) {
+        return bookingDAO.getFilteredBookings(payStatus, payMethod, (page - 1) * pageSize, pageSize);
     }
 
-    public int getPendingBookingCount() {
-        return bookingDAO.getPendingBookingCount();
+    public int getFilteredPaymentCount(String payStatus, String payMethod) {
+        return bookingDAO.getFilteredBookingCount(payStatus, payMethod);
     }
 
-    public BigDecimal getTotalRevenue() {
-        return bookingDAO.getTotalRevenue();
+    public List<Booking> getBookingsByFilter(String filter, int page, int pageSize) {
+        return bookingDAO.getBookingsByFilter(filter, (page - 1) * pageSize, pageSize);
     }
 
-    public List<Booking> getRecentBookings(int limit) {
-        return bookingDAO.getRecentBookings(limit);
+    public int getBookingsByFilterCount(String filter) {
+        return bookingDAO.getBookingsByFilterCount(filter);
     }
+
+    public int getPaidCount() { return bookingDAO.getPaidCount(); }
+    public int getUnpaidCount() { return bookingDAO.getUnpaidCount(); }
+    public int getOnlinePaymentCount() { return bookingDAO.getOnlinePaymentCount(); }
+
+    public int getBookingCount() { return bookingDAO.getBookingCount(); }
+    public int getActiveBookingCount() { return bookingDAO.getActiveBookingCount(); }
+    public int getPendingBookingCount() { return bookingDAO.getPendingBookingCount(); }
+    public BigDecimal getTotalRevenue() { return bookingDAO.getTotalRevenue(); }
+    public List<Booking> getRecentBookings(int limit) { return bookingDAO.getRecentBookings(limit); }
+
+    // ===== Analytics =====
+    public java.util.List<java.util.Map<String, Object>> getMonthlyRevenue(int months) {
+        return bookingDAO.getMonthlyRevenue(months);
+    }
+    public java.util.Map<String, Integer> getBookingCountByStatus() {
+        return bookingDAO.getBookingCountByStatus();
+    }
+    public java.util.Map<String, Integer> getPaymentMethodSplit() {
+        return bookingDAO.getPaymentMethodSplit();
+    }
+
+    // ===== Date-range export =====
+    public List<Booking> getBookingsInDateRange(String start, String end, String payStatus, String payMethod) {
+        return bookingDAO.getBookingsInDateRange(start, end, payStatus, payMethod);
+    }
+
+    // ===== Overdue =====
+    public List<Booking> getOverdueBookings() { return bookingDAO.getOverdueBookings(); }
 
     /**
      * Calculate price preview (without saving).
@@ -189,3 +218,4 @@ public class BookingService {
         return new BigDecimal[]{totalPrice, discount, finalPrice, BigDecimal.valueOf(totalDays)};
     }
 }
+

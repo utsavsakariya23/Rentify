@@ -159,4 +159,15 @@ public class ContactMessageDAO {
         try { m.setUserName(rs.getString("user_name")); } catch (SQLException ignored) {}
         return m;
     }
+
+    public int getUnreadCount() {
+        String sql = "SELECT COUNT(*) FROM contact_messages WHERE status = 'Unread'";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
 }
+

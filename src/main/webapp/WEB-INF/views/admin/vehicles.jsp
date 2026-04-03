@@ -18,6 +18,15 @@
             </c:if>
 
             <div class="card card-modern border-0 p-4">
+                <!-- AJAX Search -->
+                <div class="mb-3 d-flex gap-2 align-items-center">
+                    <div class="input-group" style="max-width: 400px;">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="vehicleSearch" class="form-control" placeholder="Search by name, brand, status..." autocomplete="off">
+                        <button class="btn btn-outline-secondary" onclick="clearSearch('vehicleSearch', 'vehicleTbody', 'noVehicleRow')" title="Clear"><i class="fas fa-times"></i></button>
+                    </div>
+                    <span id="vehicleSearchCount" class="text-muted small"></span>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
@@ -33,7 +42,7 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="vehicleTbody">
                             <c:forEach var="car" items="${cars}">
                                 <tr>
                                     <td>${car.carId}</td>
@@ -189,21 +198,79 @@
                 </div>
             </div>
 
+
             <script>
-                (function () {
-                    'use strict'
-                    var forms = document.querySelectorAll('.needs-validation')
-                    Array.prototype.slice.call(forms)
-                        .forEach(function (form) {
-                            form.addEventListener('submit', function (event) {
-                                if (!form.checkValidity()) {
-                                    event.preventDefault()
-                                    event.stopPropagation()
+                (function() {
+                    var CTX_PATH = '${pageContext.request.contextPath}';
+                    var searchTimer;
+                    var searchInput = document.getElementById('vehicleSearch');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            clearTimeout(searchTimer);
+                            var q = this.value.trim();
+                            searchTimer = setTimeout(function() { searchVehicles(q); }, 300);
+                        });
+                    }
+
+                    function statusBadge(s) {
+                        if (s === 'Available') return '<span class="badge bg-success">Available</span>';
+                        if (s === 'Booked')    return '<span class="badge bg-warning text-dark">Booked</span>';
+                        return '<span class="badge bg-danger">Service</span>';
+                    }
+
+                    window.searchVehicles = function(q) {
+                        if (!q) { location.reload(); return; }
+                        var tbody = document.getElementById('vehicleTbody');
+                        var countEl = document.getElementById('vehicleSearchCount');
+                        fetch(CTX_PATH + '/admin/api/search_vehicles?q=' + encodeURIComponent(q))
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                if (countEl) countEl.textContent = data.length + ' result(s)';
+                                if (!tbody) return;
+                                if (data.length === 0) {
+                                    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No vehicles match your search</td></tr>';
+                                    return;
                                 }
-                                form.classList.add('was-validated')
-                            }, false)
-                        })
-                })()
+                                var html = '';
+                                for (var i = 0; i < data.length; i++) {
+                                    var c = data[i];
+                                    var imgHtml = c.imageUrl
+                                        ? '<img src="' + c.imageUrl + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px">'
+                                        : '<i class="fas fa-car text-muted"></i>';
+                                    html += '<tr>'
+                                        + '<td>' + c.carId + '</td>'
+                                        + '<td>' + imgHtml + '</td>'
+                                        + '<td class="fw-bold">' + (c.name || '') + '</td>'
+                                        + '<td>' + (c.brand || '') + '</td>'
+                                        + '<td>Rs. ' + parseInt(c.pricePerDay).toLocaleString() + '</td>'
+                                        + '<td>' + (c.fuelType || '') + '</td>'
+                                        + '<td>' + (c.transmission || '') + '</td>'
+                                        + '<td>' + statusBadge(c.status) + '</td>'
+                                        + '<td><a href="' + CTX_PATH + '/admin/vehicles" class="btn btn-sm btn-outline-secondary">View</a></td>'
+                                        + '</tr>';
+                                }
+                                tbody.innerHTML = html;
+                            }).catch(function() {});
+                    };
+
+                    window.clearSearch = function(inputId) {
+                        var el = document.getElementById(inputId);
+                        if (el) el.value = '';
+                        location.reload();
+                    };
+
+                    // Form validation
+                    (function () {
+                        'use strict';
+                        var forms = document.querySelectorAll('.needs-validation');
+                        Array.prototype.slice.call(forms).forEach(function (form) {
+                            form.addEventListener('submit', function (event) {
+                                if (!form.checkValidity()) { event.preventDefault(); event.stopPropagation(); }
+                                form.classList.add('was-validated');
+                            }, false);
+                        });
+                    })();
+                })();
             </script>
 
         <%@ include file="components/adminFooter.jsp" %>

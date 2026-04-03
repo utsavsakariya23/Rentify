@@ -92,7 +92,14 @@
                                                     <i class="fas fa-star"></i> Review
                                                 </button>
                                             </c:if>
+                                            <%-- Invoice button for paid bookings --%>
+                                            <c:if test="${b.paymentStatus == 'Paid'}">
+                                                <a href="${pageContext.request.contextPath}/invoice?bookingId=${b.bookingId}" target="_blank" class="btn btn-sm btn-outline-info" title="Download Invoice">
+                                                    <i class="fas fa-file-invoice"></i> Invoice
+                                                </a>
+                                            </c:if>
                                         </td>
+
                                     </tr>
 
                                     <!-- Review Modal -->

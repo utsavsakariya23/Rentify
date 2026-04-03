@@ -70,41 +70,63 @@
                     <div class="col-lg-7">
                         <div class="card card-modern border-0 p-4 h-100">
                             <h3 class="fw-bold mb-4">Send Message</h3>
-                            <form class="needs-validation" novalidate id="contactForm">
+
+                            <%-- Success / Error Alerts --%>
+                            <% if ("message_sent".equals(request.getParameter("success"))) { %>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i><strong>Message sent!</strong> We'll get back to you within 24 hours.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            <% } %>
+                            <% if ("send_failed".equals(request.getParameter("error"))) { %>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>Failed to send message. Please try again.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            <% } %>
+                            <% if ("empty_fields".equals(request.getParameter("error"))) { %>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Please fill in all required fields.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            <% } %>
+
+                            <form class="needs-validation" novalidate id="contactForm"
+                                  action="${pageContext.request.contextPath}/send_message" method="post">
                                 <div class="row g-3">
                                     <div class="col-md-6 position-relative pb-4">
-                                        <label class="form-label small fw-bold text-muted">FIRST NAME</label>
-                                        <input type="text" class="form-control bg-light border-0 py-2"
-                                            placeholder="Enter your first name" required>
-                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your first name.</div>
-                                    </div>
-                                    <div class="col-md-6 position-relative pb-4">
-                                        <label class="form-label small fw-bold text-muted">LAST NAME</label>
-                                        <input type="text" class="form-control bg-light border-0 py-2"
-                                            placeholder="Enter your last name" required>
-                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your last name.</div>
+                                        <label class="form-label small fw-bold text-muted">FULL NAME</label>
+                                        <input type="text" name="name" class="form-control bg-light border-0 py-2"
+                                            placeholder="Enter your full name" required minlength="2" maxlength="100">
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your full name.</div>
                                     </div>
                                     <div class="col-md-6 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">EMAIL</label>
-                                        <input type="email" class="form-control bg-light border-0 py-2"
+                                        <input type="email" name="email" class="form-control bg-light border-0 py-2"
                                             placeholder="Enter your email" required>
                                         <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter a valid email address.</div>
                                     </div>
                                     <div class="col-md-6 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">PHONE</label>
-                                        <input type="tel" class="form-control bg-light border-0 py-2"
-                                            placeholder="Enter Your Phone Number" pattern="^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$" required>
+                                        <input type="tel" name="phone" class="form-control bg-light border-0 py-2"
+                                            placeholder="Enter your phone number" pattern="^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$">
                                         <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter a valid phone number.</div>
+                                    </div>
+                                    <div class="col-md-6 position-relative pb-4">
+                                        <label class="form-label small fw-bold text-muted">SUBJECT</label>
+                                        <input type="text" name="subject" class="form-control bg-light border-0 py-2"
+                                            placeholder="Enter subject" maxlength="200">
                                     </div>
                                     <div class="col-12 position-relative pb-4">
                                         <label class="form-label small fw-bold text-muted">MESSAGE</label>
-                                        <textarea class="form-control bg-light border-0 py-2" rows="5"
-                                            placeholder="Your message here..." required></textarea>
-                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your message.</div>
+                                        <textarea name="message" class="form-control bg-light border-0 py-2" rows="5"
+                                            placeholder="Your message here..." required minlength="10" maxlength="2000"></textarea>
+                                        <div class="invalid-feedback position-absolute bottom-0 start-0 ps-3 mb-1">Please enter your message (min 10 characters).</div>
                                     </div>
                                     <div class="col-12 text-end">
-                                        <button type="submit" class="btn btn-primary-custom px-5 btn-lg">Send
-                                            Message</button>
+                                        <button type="submit" class="btn btn-primary-custom px-5 btn-lg">
+                                            <i class="fas fa-paper-plane me-2"></i>Send Message
+                                        </button>
                                     </div>
                                 </div>
                             </form>
