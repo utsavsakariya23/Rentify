@@ -1,6 +1,7 @@
 package com.carent.service;
 
 import com.carent.repository.BookingDAO;
+import com.carent.repository.ExpenseDAO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -9,12 +10,13 @@ public class FinanceService {
 
     private static final BigDecimal GST_RATE = new BigDecimal("18");  // 18%
     private final BookingDAO bookingDAO = new BookingDAO();
+    private final ExpenseDAO expenseDAO = new ExpenseDAO();
 
     public BigDecimal getGstRate() { return GST_RATE; }
 
     /**
      * Monthly income statement for a given month/year.
-     * Returns: grossRevenue, gstCollected, netRevenue (after GST)
+     * Returns: grossRevenue, gstCollected, netRevenue (after GST), expenses, profit
      */
     public Map<String, BigDecimal> getMonthlyStatement(int month, int year) {
         Map<String, BigDecimal> stmt = new LinkedHashMap<>();
@@ -23,9 +25,15 @@ public class FinanceService {
         BigDecimal gst = gross.multiply(GST_RATE)
                               .divide(BigDecimal.valueOf(100).add(GST_RATE), 2, RoundingMode.HALF_UP);
         BigDecimal net = gross.subtract(gst);
+        
+        BigDecimal expenses = expenseDAO.getTotalExpensesByMonthYear(month, year);
+        BigDecimal profit = net.subtract(expenses);
+        
         stmt.put("grossRevenue", gross);
         stmt.put("gstCollected", gst);
         stmt.put("netRevenue", net);
+        stmt.put("totalExpenses", expenses);
+        stmt.put("netProfit", profit);
         return stmt;
     }
 
@@ -40,9 +48,16 @@ public class FinanceService {
             BigDecimal gst = rev.multiply(GST_RATE)
                                .divide(BigDecimal.valueOf(100).add(GST_RATE), 2, RoundingMode.HALF_UP);
             BigDecimal net = rev.subtract(gst);
+            
+            int month = (int) row.get("month");
+            BigDecimal expenses = expenseDAO.getTotalExpensesByMonthYear(month, year);
+            BigDecimal profit = net.subtract(expenses);
+            
             Map<String, Object> r = new LinkedHashMap<>(row);
             r.put("gst", gst);
             r.put("netRevenue", net);
+            r.put("expenses", expenses);
+            r.put("profit", profit);
             result.add(r);
         }
         return result;
@@ -72,5 +87,9 @@ public class FinanceService {
 
     public List<Map<String, Object>> getMonthlyRevenueSummary(int year) {
         return bookingDAO.getMonthlyRevenueSummary(year);
+    }
+    
+    public BigDecimal getTotalExpensesByYear(int year) {
+        return expenseDAO.getTotalExpensesByYear(year);
     }
 }

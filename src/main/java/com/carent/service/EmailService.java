@@ -147,6 +147,19 @@ public class EmailService {
         sendEmailAsync(to, subject, body);
     }
 
+    public void sendRefundEmail(String toAddress, String userName, int bookingId, java.math.BigDecimal amount) {
+        String subject = "Refund Processed for Your Recent Booking #" + bookingId;
+        String body = "<h2>Refund Processed</h2>" +
+                      "<p>Dear " + userName + ",</p>" +
+                      "<p>We have successfully processed a refund for your booking <b>#" + bookingId + "</b>.</p>" +
+                      "<p>Amount Refunded: <b>Rs. " + amount + "</b></p>" +
+                      "<p>Please allow 3-5 business days for the funds to appear in your original payment method.</p>" +
+                      "<p>If you have any questions, feel free to contact us.</p>" +
+                      "<p>Thank you,<br>The Carent Team</p>";
+        sendEmailAsync(toAddress, subject, body);
+    }
+
+
     private String buildHtmlBody(String content) {
         return "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>"
                 +

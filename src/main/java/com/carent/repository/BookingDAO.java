@@ -178,7 +178,7 @@ public class BookingDAO {
     }
 
     /** Filtered query for payments page */
-    public List<Booking> getFilteredBookings(String payStatus, String payMethod, int offset, int limit) {
+    public List<Booking> getFilteredBookings(String payStatus, String payMethod, String searchId, int offset, int limit) {
         List<Booking> bookings = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT b.*, u.full_name AS user_name, u.email AS user_email, c.name AS car_name, c.brand AS car_brand " +
@@ -187,12 +187,17 @@ public class BookingDAO {
             "JOIN cars c ON b.car_id = c.car_id WHERE 1=1");
         if (payStatus != null && !payStatus.isEmpty()) sql.append(" AND b.payment_status = ?");
         if (payMethod != null && !payMethod.isEmpty()) sql.append(" AND b.payment_method = ?");
+        if (searchId != null && !searchId.trim().isEmpty()) sql.append(" AND (b.transaction_id = ? OR CAST(b.booking_id AS TEXT) = ?)");
         sql.append(" ORDER BY b.created_at DESC LIMIT ? OFFSET ?");
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (payStatus != null && !payStatus.isEmpty()) ps.setString(idx++, payStatus);
             if (payMethod != null && !payMethod.isEmpty()) ps.setString(idx++, payMethod);
+            if (searchId != null && !searchId.trim().isEmpty()) {
+                ps.setString(idx++, searchId.trim());
+                ps.setString(idx++, searchId.trim());
+            }
             ps.setInt(idx++, limit);
             ps.setInt(idx, offset);
             try (ResultSet rs = ps.executeQuery()) {
@@ -204,15 +209,20 @@ public class BookingDAO {
         return bookings;
     }
 
-    public int getFilteredBookingCount(String payStatus, String payMethod) {
+    public int getFilteredBookingCount(String payStatus, String payMethod, String searchId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM bookings WHERE 1=1");
         if (payStatus != null && !payStatus.isEmpty()) sql.append(" AND payment_status = ?");
         if (payMethod != null && !payMethod.isEmpty()) sql.append(" AND payment_method = ?");
+        if (searchId != null && !searchId.trim().isEmpty()) sql.append(" AND (transaction_id = ? OR CAST(booking_id AS TEXT) = ?)");
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (payStatus != null && !payStatus.isEmpty()) ps.setString(idx++, payStatus);
-            if (payMethod != null && !payMethod.isEmpty()) ps.setString(idx, payMethod);
+            if (payMethod != null && !payMethod.isEmpty()) ps.setString(idx++, payMethod);
+            if (searchId != null && !searchId.trim().isEmpty()) {
+                ps.setString(idx++, searchId.trim());
+                ps.setString(idx++, searchId.trim());
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }

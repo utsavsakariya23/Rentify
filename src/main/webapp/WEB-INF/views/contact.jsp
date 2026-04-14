@@ -137,11 +137,18 @@
 
             <!-- Map Placeholder -->
             <section class="container-fluid p-0">
-                <div
-                    style="width: 100%; height: 400px; background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
-                    <p class="text-muted"><i class="fas fa-map-marked-alt fa-3x mb-2 d-block text-center"></i>Google
-                        Maps Placeholder</p>
-                </div>
+                <iframe 
+                    width="100%" 
+                    height="400" 
+                    frameborder="0" 
+                    scrolling="no" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    src="https://maps.google.com/maps?q=Bhavnagar%20Highway,%20Kasturbadham,%20Rajkot,%20Gujarat,%20India%20360020&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy">
+                </iframe>
             </section>
         </main>
 

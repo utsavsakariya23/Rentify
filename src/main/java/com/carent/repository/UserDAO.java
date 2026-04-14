@@ -285,6 +285,36 @@ public class UserDAO {
         return emails;
     }
 
+    public List<User> getBookersByFrequency(boolean isFrequent, int threshold) {
+        List<User> users = new ArrayList<>();
+        String op = isFrequent ? ">=" : "<";
+        String sql = "SELECT u.* FROM users u LEFT JOIN bookings b ON u.user_id = b.user_id " +
+                     "WHERE u.role = 'Customer' GROUP BY u.user_id HAVING COUNT(b.booking_id) " + op + " ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, threshold);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) users.add(mapResultSetToUser(rs));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return users;
+    }
+
+    public List<String> getBookerEmailsByFrequency(boolean isFrequent, int threshold) {
+        List<String> emails = new ArrayList<>();
+        String op = isFrequent ? ">=" : "<";
+        String sql = "SELECT u.email FROM users u LEFT JOIN bookings b ON u.user_id = b.user_id " +
+                     "WHERE u.role = 'Customer' GROUP BY u.user_id HAVING COUNT(b.booking_id) " + op + " ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, threshold);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) emails.add(rs.getString("email"));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return emails;
+    }
+
     public List<User> searchCustomers(String q) {
         List<User> users = new ArrayList<>();
         String kw = "%" + (q != null ? q.trim().toLowerCase() : "") + "%";
@@ -325,6 +355,24 @@ public class UserDAO {
             }
         } catch (SQLException e) { e.printStackTrace(); }
         return result;
+    }
+
+    /** Customers who haven't booked in the last N months */
+    public List<User> getInactiveUsers(int months) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT u.* FROM users u " +
+                     "WHERE u.role = 'Customer' AND u.user_id NOT IN (" +
+                     "    SELECT DISTINCT user_id FROM bookings " +
+                     "    WHERE start_date >= CURRENT_DATE - INTERVAL '" + months + " months'" +
+                     ") ORDER BY u.created_at DESC LIMIT 50";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return users;
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

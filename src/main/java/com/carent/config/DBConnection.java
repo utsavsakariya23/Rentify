@@ -13,7 +13,7 @@ public class DBConnection {
 
     private static final String DB_URL = "jdbc:postgresql://localhost:8001/carent_db";
     private static final String DB_USER = "postgres";
-    private static final String DB_PASSWORD = "utsav#2309"; // <-- Change this to your PostgreSQL password
+    private static final String DB_PASSWORD = "utsav#2309"; //  PostgreSQL password
 
     static {
         try {

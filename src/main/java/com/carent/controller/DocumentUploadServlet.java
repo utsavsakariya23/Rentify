@@ -57,7 +57,6 @@ public class DocumentUploadServlet extends HttpServlet {
                     if (url != null) currentLicenseUrl = url;
                 }
             }
-            
             if (currentIdUrl != null || currentLicenseUrl != null) {
                 boolean updated = userDAO.updateUserDocuments(currentUser.getUserId(), currentIdUrl, currentLicenseUrl);
                 if (updated) {

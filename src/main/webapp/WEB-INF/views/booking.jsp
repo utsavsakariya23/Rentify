@@ -2,6 +2,11 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
     <%@ include file="components/header.jsp" %>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        #rajkotMap { height: 300px; width: 100%; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #dee2e6; }
+    </style>
 
         <main class="container my-5 pt-5">
             <div class="row justify-content-center">
@@ -50,14 +55,26 @@
                                             <div class="invalid-feedback">Please select a valid return date.</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold">Pickup Location</label>
-                                            <input type="text" class="form-control" name="pickupLocation" placeholder="Enter pickup location" minlength="3" maxlength="100" required>
-                                            <div class="invalid-feedback">Pickup location must be between 3 and 100 characters.</div>
+                                            <label class="form-label fw-bold">Pickup Location (Rajkot Only)</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" name="pickupLocation" id="pickupLocation" placeholder="Select on map" readonly required>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="setSelectionMode('pickup')"><i class="fas fa-map-marker-alt text-success"></i></button>
+                                            </div>
+                                            <div class="invalid-feedback">Please select a pickup location from the map.</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold">Drop Location</label>
-                                            <input type="text" class="form-control" name="dropLocation" placeholder="Enter drop location" minlength="3" maxlength="100" required>
-                                            <div class="invalid-feedback">Drop location must be between 3 and 100 characters.</div>
+                                            <label class="form-label fw-bold">Drop Location (Rajkot Only)</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" name="dropLocation" id="dropLocation" placeholder="Select on map" readonly required>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="setSelectionMode('drop')"><i class="fas fa-map-marker-alt text-danger"></i></button>
+                                            </div>
+                                            <div class="invalid-feedback">Please select a drop location from the map.</div>
+                                        </div>
+                                        
+                                        <!-- Map Selection Area -->
+                                        <div class="col-12">
+                                            <p class="small text-muted mb-1" id="mapInstructions">Click the map icon above to select locations.</p>
+                                            <div id="rajkotMap"></div>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label fw-bold">Coupon Code (Optional)</label>
@@ -314,4 +331,104 @@
             }
         </script>
 
+        <!-- Leaflet JS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            // Leaflet Map Initialization for Rajkot bounds
+            let map, pickupMarker, dropMarker;
+            let currentMode = null; // 'pickup' or 'drop'
+            
+            // Rajkot bounds: lat 22.15 to 22.45, lng 70.65 to 70.95
+            const BOUNDS = [
+                [22.15, 70.65], // Southwest
+                [22.45, 70.95]  // Northeast
+            ];
+
+            function initMap() {
+                if (document.getElementById('rajkotMap')) {
+                    map = L.map('rajkotMap', {
+                        maxBounds: BOUNDS,
+                        maxBoundsViscosity: 1.0,
+                        minZoom: 11
+                    }).setView([22.30, 70.80], 12);
+                    
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    map.on('click', function(e) {
+                        if (!currentMode) {
+                            showToast("Please click the marker icon next to Pickup or Drop input first.", "info");
+                            return;
+                        }
+
+                        const lat = e.latlng.lat;
+                        const lng = e.latlng.lng;
+                        
+                        // Enforce Rajkot bounds
+                        if (lat < 22.15 || lat > 22.45 || lng < 70.65 || lng > 70.95) {
+                            showToast("Selected location is outside Rajkot city boundaries.", "error");
+                            return;
+                        }
+
+                        // Reverse Geocoding via server-side JSP proxy
+                        var geocodeUrl = '${pageContext.request.contextPath}/geocode.jsp?lat=' + lat + '&lon=' + lng;
+                        fetch(geocodeUrl)
+                            .then(res => {
+                                if (!res.ok) throw new Error("Network not OK: " + res.status);
+                                return res.json();
+                            })
+                            .then(data => {
+                                let address = "Selected Location";
+                                if (data && data.display_name) {
+                                    // Use Nominatim's high-precision display_name via proxy
+                                    address = data.display_name.split(',').slice(0, 4).join(',');
+                                }
+
+                                if (currentMode === 'pickup') {
+                                    if (pickupMarker) map.removeLayer(pickupMarker);
+                                    pickupMarker = L.marker([lat, lng], {icon: createIcon('green')}).addTo(map)
+                                        .bindPopup("Pickup: " + address).openPopup();
+                                    document.getElementById('pickupLocation').value = address.trim();
+                                    setSelectionMode('drop'); // Auto switch
+                                } else if (currentMode === 'drop') {
+                                    if (dropMarker) map.removeLayer(dropMarker);
+                                    dropMarker = L.marker([lat, lng], {icon: createIcon('red')}).addTo(map)
+                                        .bindPopup("Drop: " + address).openPopup();
+                                    document.getElementById('dropLocation').value = address.trim();
+                                    currentMode = null;
+                                    document.getElementById('mapInstructions').textContent = "Both locations selected.";
+                                }
+                            })
+                            .catch(err => {
+                                showToast("Error retrieving address, please try again.", "error");
+                            });
+                    });
+                }
+            }
+
+            function setSelectionMode(mode) {
+                currentMode = mode;
+                document.getElementById('mapInstructions').innerHTML = mode === 'pickup' 
+                    ? "<span class='text-success fw-bold'>Click on the map to select PICKUP location within Rajkot.</span>"
+                    : "<span class='text-danger fw-bold'>Click on the map to select DROP location within Rajkot.</span>";
+            }
+            
+            function createIcon(color) {
+                return new L.Icon({
+                    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+            }
+
+            // Init map after DOM
+            document.addEventListener("DOMContentLoaded", initMap);
+        </script>
+
+        <!-- Admin Contact Reply Modal setup for next phase removed from booking but kept just in case -->
+        
     <%@ include file="components/footer.jsp" %>

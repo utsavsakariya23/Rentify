@@ -52,4 +52,12 @@ public class ReviewService {
     public boolean deleteReview(int reviewId) {
         return reviewDAO.deleteReview(reviewId);
     }
+
+    public boolean updateAdminReply(int reviewId, String reply) {
+        return reviewDAO.updateAdminReply(reviewId, reply);
+    }
+
+    public Review getReviewById(int reviewId) {
+        return reviewDAO.getReviewById(reviewId);
+    }
 }

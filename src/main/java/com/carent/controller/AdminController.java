@@ -28,6 +28,7 @@ public class AdminController extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final CloudinaryService cloudinaryService = new CloudinaryService();
     private final EmailService emailService = new EmailService();
+    private final com.carent.repository.ExpenseDAO expenseDAO = new com.carent.repository.ExpenseDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -103,6 +104,9 @@ public class AdminController extends HttpServlet {
             case "/admin/delete_review":
                 handleDeleteReview(request, response);
                 break;
+            case "/admin/reply_review":
+                handleReplyReview(request, response);
+                break;
             case "/admin/update_profile":
                 handleUpdateProfile(request, response);
                 break;
@@ -111,6 +115,12 @@ public class AdminController extends HttpServlet {
                 break;
             case "/admin/update_fleet":
                 handleUpdateFleet(request, response);
+                break;
+            case "/admin/add_expense":
+                handleAddExpense(request, response);
+                break;
+            case "/admin/delete_expense":
+                handleDeleteExpense(request, response);
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
@@ -146,6 +156,36 @@ public class AdminController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/fleet?error=Update+failed");
+        }
+    }
+
+    private void handleAddExpense(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String description = request.getParameter("description");
+        String category = request.getParameter("category");
+        String amountStr = request.getParameter("amount");
+        String dateStr = request.getParameter("expenseDate");
+
+        try {
+            Expense expense = new Expense();
+            expense.setDescription(description);
+            expense.setCategory(category != null ? category : "General");
+            expense.setAmount(new BigDecimal(amountStr));
+            expense.setExpenseDate(Date.valueOf(dateStr));
+            
+            boolean success = expenseDAO.addExpense(expense);
+            response.sendRedirect(request.getContextPath() + "/admin/finance?expense_success=" + success);
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/admin/finance?expense_success=false");
+        }
+    }
+
+    private void handleDeleteExpense(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int expenseId = Integer.parseInt(request.getParameter("expenseId"));
+            boolean success = expenseDAO.deleteExpense(expenseId);
+            response.sendRedirect(request.getContextPath() + "/admin/finance?expense_deleted=" + success);
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/admin/finance?expense_deleted=false");
         }
     }
 
@@ -266,35 +306,6 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void handleRefundPayment(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        int bookingId = Integer.parseInt(request.getParameter("bookingId"));
-        bookingService.refundBooking(bookingId);
-        response.sendRedirect(request.getContextPath() + "/admin/payments?success=booking_refunded");
-    }
-
-    private void handleExportPaymentsCsv(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv; charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"payments_export.csv\"");
-        java.util.List<com.carent.model.Booking> all = bookingService.getFilteredPayments(null, null, 1, 10000);
-        java.io.PrintWriter pw = response.getWriter();
-        pw.println("Booking ID,Customer,Car,Amount (Rs),Method,Transaction ID,Payment Status,Booking Status,Date");
-        for (com.carent.model.Booking b : all) {
-            pw.printf("\"%s\",\"%s\",\"%s %s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
-                b.getBookingId(),
-                b.getUserName() != null ? b.getUserName() : "",
-                b.getCarBrand() != null ? b.getCarBrand() : "",
-                b.getCarName() != null ? b.getCarName() : "",
-                b.getFinalPrice(),
-                b.getPaymentMethod() != null ? b.getPaymentMethod() : "Cash",
-                b.getTransactionId() != null ? b.getTransactionId() : "",
-                b.getPaymentStatus(),
-                b.getBookingStatus(),
-                b.getCreatedAt()
-            );
-        }
-        pw.flush();
-    }
-
     private void handleAddCoupon(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Coupon coupon = new Coupon();
         coupon.setCode(request.getParameter("code"));
@@ -325,7 +336,10 @@ public class AdminController extends HttpServlet {
     private void handleSendNotification(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String message = request.getParameter("message");
         boolean sendEmail = "on".equals(request.getParameter("sendEmail"));
-        notificationService.sendNotification(message, sendEmail);
+        String audienceType = request.getParameter("audienceType");
+        if (audienceType == null) audienceType = "all";
+        
+        notificationService.sendNotification(message, sendEmail, audienceType);
         response.sendRedirect(request.getContextPath() + "/admin/notifications?success=notification_sent");
     }
 
@@ -362,6 +376,36 @@ public class AdminController extends HttpServlet {
         int reviewId = Integer.parseInt(request.getParameter("reviewId"));
         reviewService.deleteReview(reviewId);
         response.sendRedirect(request.getContextPath() + "/admin/reviews");
+    }
+
+    private void handleReplyReview(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int reviewId = Integer.parseInt(request.getParameter("reviewId"));
+        String replyText = request.getParameter("replyText");
+        boolean notifyUser = "on".equals(request.getParameter("notifyUser"));
+
+        if (replyText != null && !replyText.trim().isEmpty()) {
+            boolean updated = reviewService.updateAdminReply(reviewId, replyText);
+            
+            if (updated && notifyUser) {
+                Review review = reviewService.getReviewById(reviewId);
+                if (review != null) {
+                    User user = userDAO.getUserById(review.getUserId());
+                    if (user != null) {
+                        try {
+                            String emailBody = "Dear " + user.getFullName() + ",<br><br>" +
+                                               "We have replied to your review about your recent booking!<br><br>" +
+                                               "<b>Your Review:</b> \"" + review.getComment() + "\"<br><br>" +
+                                               "<b>Our Reply:</b> \"" + replyText + "\"<br><br>" +
+                                               "Thank you for your feedback!<br>The Carent Team";
+                            emailService.sendEmail(user.getEmail(), "Update on your Carent Review", emailBody);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/reviews?success=reply_posted");
     }
 
     private void handleUpdateProfile(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -420,7 +464,16 @@ public class AdminController extends HttpServlet {
         if (bidStr != null) {
             try {
                 int bookingId = Integer.parseInt(bidStr);
-                bookingService.refundBooking(bookingId);
+                boolean refunded = bookingService.refundBooking(bookingId);
+                
+                if (refunded) {
+                    Booking booking = bookingService.getBookingById(bookingId);
+                    if (booking != null && booking.getUserEmail() != null) {
+                        try {
+                            emailService.sendRefundEmail(booking.getUserEmail(), booking.getUserName(), bookingId, booking.getFinalPrice());
+                        } catch (Exception e) {}
+                    }
+                }
             } catch (NumberFormatException ignored) {}
         }
         String back = (redirect != null && redirect.equals("payments"))

@@ -170,6 +170,36 @@ public class ReviewDAO {
         return false;
     }
 
+    public boolean updateAdminReply(int reviewId, String reply) {
+        String sql = "UPDATE reviews SET admin_reply = ? WHERE review_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reply);
+            ps.setInt(2, reviewId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public Review getReviewById(int reviewId) {
+        String sql = "SELECT r.*, u.full_name AS user_name, c.name AS car_name FROM reviews r " +
+                     "JOIN users u ON r.user_id = u.user_id " +
+                     "JOIN cars c ON r.car_id = c.car_id " +
+                     "WHERE r.review_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, reviewId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapResultSetToReview(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private Review mapResultSetToReview(ResultSet rs) throws SQLException {
         Review r = new Review();
         r.setReviewId(rs.getInt("review_id"));
@@ -178,6 +208,7 @@ public class ReviewDAO {
         r.setCarId(rs.getInt("car_id"));
         r.setRating(rs.getInt("rating"));
         r.setComment(rs.getString("comment"));
+        r.setAdminReply(rs.getString("admin_reply"));
         r.setCreatedAt(rs.getTimestamp("created_at"));
         try { r.setUserName(rs.getString("user_name")); } catch (SQLException ignored) {}
         try { r.setCarName(rs.getString("car_name")); } catch (SQLException ignored) {}

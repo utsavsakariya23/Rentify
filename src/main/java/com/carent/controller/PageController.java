@@ -1,6 +1,7 @@
 package com.carent.controller;
 
 import java.io.IOException;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -270,8 +271,9 @@ public class PageController extends HttpServlet {
             case "/admin/payments": {
                 String payStatus = request.getParameter("payStatus");
                 String payMethod = request.getParameter("payMethod");
-                List<Booking> adminPaymentsList = bookingService.getFilteredPayments(payStatus, payMethod, page, PAGE_SIZE);
-                int adminTotalPaymentsCount = bookingService.getFilteredPaymentCount(payStatus, payMethod);
+                String searchId = request.getParameter("searchId");
+                List<Booking> adminPaymentsList = bookingService.getFilteredPayments(payStatus, payMethod, searchId, page, PAGE_SIZE);
+                int adminTotalPaymentsCount = bookingService.getFilteredPaymentCount(payStatus, payMethod, searchId);
                 request.setAttribute("payments", adminPaymentsList);
                 request.setAttribute("currentPage", page);
                 request.setAttribute("totalPages", (int) Math.ceil((double) adminTotalPaymentsCount / PAGE_SIZE));
@@ -314,6 +316,11 @@ public class PageController extends HttpServlet {
                 request.setAttribute("notifications", notifications);
                 request.setAttribute("currentPage", page);
                 request.setAttribute("totalPages", (int) Math.ceil((double) totalNotifications / PAGE_SIZE));
+                
+                // Business Insights for sidebar
+                request.setAttribute("inactiveUsers", userDAO.getInactiveUsers(3)); // Dormant for 3 months
+                request.setAttribute("hotCars", carDAO.getTopRentedCars(3));
+                
                 request.getRequestDispatcher("/WEB-INF/views/admin/notifications.jsp").forward(request, response);
                 break;
 
@@ -356,6 +363,11 @@ public class PageController extends HttpServlet {
                 request.setAttribute("currentMonth", now.getMonth().getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH));
                 request.setAttribute("currentYear", now.getYear());
                 request.setAttribute("gstRate", financeService.getGstRate());
+                
+                // Fetch recent expenses
+                com.carent.repository.ExpenseDAO expenseDAO = new com.carent.repository.ExpenseDAO();
+                request.setAttribute("recentExpenses", expenseDAO.getRecentExpenses(10));
+                
                 request.getRequestDispatcher("/WEB-INF/views/admin/finance.jsp").forward(request, response);
                 break;
             }

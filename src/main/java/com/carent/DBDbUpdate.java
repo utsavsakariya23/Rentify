@@ -26,8 +26,7 @@ public class DBDbUpdate {
             } catch (Exception e) {
                 System.out.println("INFO: bookings migration check: " + e.getMessage());
             }
-            // 3. Users: Add id_url and license_url (Safe-guard since UserDAO also does
-            // this)
+            // 3. Users: Add id_url and license_url (Safe-guard since UserDAO also does this)
             try {
                 stmt.executeUpdate("ALTER TABLE users ADD COLUMN IF NOT EXISTS id_url TEXT");
                 stmt.executeUpdate("ALTER TABLE users ADD COLUMN IF NOT EXISTS license_url TEXT");
@@ -35,6 +34,29 @@ public class DBDbUpdate {
             } catch (Exception e) {
                 System.out.println("INFO: users migration check: " + e.getMessage());
             }
+            // 4. Expenses: Create table
+            try {
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS expenses (" +
+                    "expense_id SERIAL PRIMARY KEY, " +
+                    "description VARCHAR(255) NOT NULL, " +
+                    "amount DECIMAL(10,2) NOT NULL, " +
+                    "expense_date DATE NOT NULL, " +
+                    "category VARCHAR(50) DEFAULT 'General', " +
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+                );
+                System.out.println("SUCCESS: expenses table added or already exists.");
+            } catch (Exception e) {
+                System.out.println("INFO: expenses migration check: " + e.getMessage());
+            }
+            // 5. Reviews: Add admin_reply
+            try {
+                stmt.executeUpdate("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply TEXT");
+                System.out.println("SUCCESS: reviews admin_reply column added or already exists.");
+            } catch (Exception e) {
+                System.out.println("INFO: reviews migration check: " + e.getMessage());
+            }
+
             System.out.println("--- Database Migration Completed ---");
         } catch (Exception e) {
             e.printStackTrace();

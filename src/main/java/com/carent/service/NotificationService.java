@@ -10,20 +10,30 @@ public class NotificationService {
     private final NotificationDAO notificationDAO = new NotificationDAO();
     private final UserDAO userDAO = new UserDAO();
 
-    public boolean sendNotification(String message, boolean sendEmail) {
+    public boolean sendNotification(String message, boolean sendEmail, String audienceType) {
         boolean saved = false;
-        List<com.carent.model.User> allUsers = userDAO.getAllUsers();
-        for (com.carent.model.User u : allUsers) {
+        List<com.carent.model.User> targetUsers;
+        List<String> targetEmails = null;
+
+        if ("frequent".equals(audienceType)) {
+            targetUsers = userDAO.getBookersByFrequency(true, 3);
+            if (sendEmail) targetEmails = userDAO.getBookerEmailsByFrequency(true, 3);
+        } else if ("infrequent".equals(audienceType)) {
+            targetUsers = userDAO.getBookersByFrequency(false, 3);
+            if (sendEmail) targetEmails = userDAO.getBookerEmailsByFrequency(false, 3);
+        } else {
+            // default: all customers
+            targetUsers = userDAO.getAllUsers();
+            if (sendEmail) targetEmails = userDAO.getAllCustomerEmails();
+        }
+
+        for (com.carent.model.User u : targetUsers) {
             saved = notificationDAO.insertNotification(u.getUserId(), message) || saved;
         }
 
-        if (saved && sendEmail) {
-            // Send email to all customers asynchronously
-            List<String> emails = userDAO.getAllCustomerEmails();
-            if (!emails.isEmpty()) {
-                EmailService emailService = new EmailService();
-                emailService.sendBulkEmailAsync(emails, "Carent Notification", message);
-            }
+        if (saved && sendEmail && targetEmails != null && !targetEmails.isEmpty()) {
+            EmailService emailService = new EmailService();
+            emailService.sendBulkEmailAsync(targetEmails, "Carent Notification", message);
         }
         return saved;
     }

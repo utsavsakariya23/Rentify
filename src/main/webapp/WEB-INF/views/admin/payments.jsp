@@ -121,6 +121,10 @@
     <div class="card border-0 p-3 mb-3">
         <form method="get" action="${pageContext.request.contextPath}/admin/payments" class="row g-2 align-items-end">
             <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">SEARCH BY ID</label>
+                <input type="text" name="searchId" class="form-control" placeholder="Transaction ID or Booking ID" value="${param.searchId}">
+            </div>
+            <div class="col-md-2">
                 <label class="form-label small fw-bold text-muted">PAYMENT STATUS</label>
                 <select name="payStatus" class="form-select">
                     <option value="" ${empty param.payStatus ? 'selected' : ''}>All Statuses</option>

@@ -147,12 +147,12 @@ public class BookingService {
         return bookingDAO.refundBooking(bookingId);
     }
 
-    public List<Booking> getFilteredPayments(String payStatus, String payMethod, int page, int pageSize) {
-        return bookingDAO.getFilteredBookings(payStatus, payMethod, (page - 1) * pageSize, pageSize);
+    public List<Booking> getFilteredPayments(String payStatus, String payMethod, String searchId, int page, int pageSize) {
+        return bookingDAO.getFilteredBookings(payStatus, payMethod, searchId, (page - 1) * pageSize, pageSize);
     }
 
-    public int getFilteredPaymentCount(String payStatus, String payMethod) {
-        return bookingDAO.getFilteredBookingCount(payStatus, payMethod);
+    public int getFilteredPaymentCount(String payStatus, String payMethod, String searchId) {
+        return bookingDAO.getFilteredBookingCount(payStatus, payMethod, searchId);
     }
 
     public List<Booking> getBookingsByFilter(String filter, int page, int pageSize) {

@@ -9,6 +9,7 @@ public class Review {
     private int carId;
     private int rating;
     private String comment;
+    private String adminReply;
     private Timestamp createdAt;
 
     // Transient
@@ -43,4 +44,7 @@ public class Review {
 
     public String getCarName() { return carName; }
     public void setCarName(String carName) { this.carName = carName; }
+
+    public String getAdminReply() { return adminReply; }
+    public void setAdminReply(String adminReply) { this.adminReply = adminReply; }
 }
