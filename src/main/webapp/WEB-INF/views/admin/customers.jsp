@@ -5,6 +5,14 @@
 
         <main class="container-fluid my-5">
             <h2 class="fw-bold mb-4">Manage Customers</h2>
+
+            <c:if test="${not empty param.success}">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>${param.success}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+
             <div class="card card-modern border-0 p-4">
                 <!-- AJAX Search -->
                 <div class="mb-3 d-flex gap-2 align-items-center">

@@ -11,6 +11,7 @@ public class Expense {
     private Date expenseDate;
     private String category;
     private Timestamp createdAt;
+    private String slipUrl;
 
     public Expense() {}
 
@@ -31,4 +32,7 @@ public class Expense {
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    public String getSlipUrl() { return slipUrl; }
+    public void setSlipUrl(String slipUrl) { this.slipUrl = slipUrl; }
 }

@@ -100,7 +100,9 @@
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">PHONE NUMBER</label>
                                         <input type="tel" class="form-control bg-light border-0" name="phone" id="regPhone"
-                                            placeholder="Enter your phone number" required>
+                                            placeholder="Enter 10-digit phone number" required pattern="^[0-9]{10}$" maxlength="10"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                        <div id="phoneFeedback" class="mt-1"></div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">LICENSE NUMBER</label>
@@ -132,13 +134,23 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">PASSWORD</label>
-                                        <input type="password" class="form-control bg-light border-0" name="password" id="regPassword"
-                                            placeholder="Create password (min 8 chars)" required>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control bg-light border-0" name="password" id="regPassword"
+                                                placeholder="Create password (min 8 chars)" required>
+                                            <button class="btn btn-outline-secondary bg-light border-0" type="button" onclick="togglePwd('regPassword', 'regPwdIcon')" tabindex="-1">
+                                                <i class="fas fa-eye text-muted" id="regPwdIcon"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">CONFIRM PASSWORD</label>
-                                        <input type="password" class="form-control bg-light border-0" name="confirmPassword" id="regConfirmPassword"
-                                            placeholder="Confirm your password" required>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control bg-light border-0" name="confirmPassword" id="regConfirmPassword"
+                                                placeholder="Confirm your password" required>
+                                            <button class="btn btn-outline-secondary bg-light border-0" type="button" onclick="togglePwd('regConfirmPassword', 'regCnfPwdIcon')" tabindex="-1">
+                                                <i class="fas fa-eye text-muted" id="regCnfPwdIcon"></i>
+                                            </button>
+                                        </div>
                                         <div id="passwordFeedback" class="mt-1"></div>
                                     </div>
 
@@ -283,6 +295,14 @@
                         showAlert('danger', 'Please fill in all fields.');
                         return;
                     }
+                    if (!/^[0-9]{10}$/.test(ph)) {
+                        showAlert('danger', 'Phone number must be exactly 10 digits.');
+                        document.getElementById('phoneFeedback').innerHTML =
+                            '<small class="text-danger"><i class="fas fa-times-circle"></i> Must be exactly 10 digits.</small>';
+                        return;
+                    }
+                    document.getElementById('phoneFeedback').innerHTML =
+                        '<small class="text-success"><i class="fas fa-check-circle"></i> Valid phone number.</small>';
                 }
 
                 document.querySelectorAll('.register-step').forEach(s => s.style.display = 'none');
@@ -497,6 +517,19 @@
             }
             function hideAlert() {
                 document.getElementById('registerAlert').style.display = 'none';
+            }
+            function togglePwd(inputId, iconId) {
+                var inp = document.getElementById(inputId);
+                var icon = document.getElementById(iconId);
+                if (inp.type === 'password') {
+                    inp.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    inp.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
             }
         </script>
 

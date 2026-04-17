@@ -19,6 +19,24 @@
                                 <div class="alert alert-danger">${param.error}</div>
                             </c:if>
 
+                            <!-- Document Verification Check -->
+                            <c:if test="${!sessionScope.loggedUser.verified}">
+                                <div class="alert alert-warning border-0 shadow-sm" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1"><i class="fas fa-shield-alt me-1"></i>Document Verification Required</h6>
+                                            <p class="mb-2 small">You need to upload and get your ID & License documents verified before you can book a car.</p>
+                                            <a href="${pageContext.request.contextPath}/profile#documents" class="btn btn-warning btn-sm fw-bold">
+                                                <i class="fas fa-upload me-1"></i>Upload Documents Now
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:if>
+
                             <c:if test="${car != null}">
                                 <!-- Car Summary -->
                                 <div class="d-flex align-items-center mb-4 p-3 rounded-3" style="background: #f8f9fa;">
@@ -83,6 +101,26 @@
                                                 <button type="button" class="btn btn-outline-primary" onclick="applyCoupon()">Apply</button>
                                             </div>
                                             <div id="couponMessage" class="mt-1"></div>
+
+                                            <!-- Coupon Suggestions -->
+                                            <c:if test="${not empty availableCoupons}">
+                                                <div class="mt-2">
+                                                    <small class="text-muted fw-bold"><i class="fas fa-tags me-1"></i>Available Coupons:</small>
+                                                    <div class="d-flex flex-wrap gap-2 mt-1">
+                                                        <c:forEach var="cpn" items="${availableCoupons}">
+                                                            <button type="button" class="btn btn-sm btn-outline-success coupon-suggestion"
+                                                                onclick="selectCoupon('${cpn.code}', this)"
+                                                                title="Expires: ${cpn.expiryDate}">
+                                                                <i class="fas fa-ticket-alt me-1"></i>${cpn.code}
+                                                                <span class="badge bg-success ms-1">${cpn.discountPercentage}% OFF</span>
+                                                            </button>
+                                                        </c:forEach>
+                                                    </div>
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${empty availableCoupons}">
+                                                <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i>No coupons available right now.</small>
+                                            </c:if>
                                         </div>
                                         <div class="col-12 mt-3">
                                             <label class="form-label fw-bold">Payment Method</label>
@@ -209,6 +247,20 @@
                     }
                 })
                 .catch(err => console.error(err));
+            }
+
+            function selectCoupon(code, btnEl) {
+                // Fill the coupon input
+                document.getElementById('couponCode').value = code;
+                // Highlight selected button
+                document.querySelectorAll('.coupon-suggestion').forEach(function(b) {
+                    b.classList.remove('btn-success');
+                    b.classList.add('btn-outline-success');
+                });
+                btnEl.classList.remove('btn-outline-success');
+                btnEl.classList.add('btn-success');
+                // Auto-apply
+                applyCoupon();
             }
 
             // Handle Booking Submission over AJAX

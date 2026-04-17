@@ -205,6 +205,10 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/send_coupon_notification</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
         <url-pattern>/admin/send_notification</url-pattern>
     </servlet-mapping>
     <servlet-mapping>

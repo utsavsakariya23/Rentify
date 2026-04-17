@@ -148,11 +148,11 @@
                 </div>
             </div>
         </c:forEach>
-            <div class="modal fade" id="addCarModal" tabindex="-1">
+        <div class="modal fade" id="addCarModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header"><h5 class="modal-title">Add New Vehicle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <form action="${pageContext.request.contextPath}/admin/add_car" method="post" class="needs-validation" novalidate>
+                        <form id="addCarForm" action="${pageContext.request.contextPath}/admin/add_car" method="post" class="needs-validation" novalidate>
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label class="form-label">Name</label>
@@ -184,14 +184,41 @@
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Image URL</label>
-                                    <input type="url" class="form-control" name="imageUrl" placeholder="https://..." required>
-                                    <div class="invalid-feedback">Please enter a valid image URL.</div>
+                                    <label class="form-label fw-bold">Car Photo</label>
+                                    <ul class="nav nav-tabs nav-fill mb-2" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#uploadPhotoTab" type="button"><i class="fas fa-upload me-1"></i>Choose Photo</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#urlPhotoTab" type="button"><i class="fas fa-link me-1"></i>Paste URL</button>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content">
+                                        <div class="tab-pane fade show active" id="uploadPhotoTab">
+                                            <input type="file" class="form-control" id="carPhotoFile" accept="image/*">
+                                            <div id="carPhotoPreview" class="mt-2 text-center" style="display:none;">
+                                                <img id="carPhotoImg" class="rounded border" style="max-height:120px;max-width:100%;object-fit:cover;">
+                                            </div>
+                                            <div id="carUploadProgress" class="mt-2" style="display:none;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="spinner-border spinner-border-sm text-primary"></div>
+                                                    <small class="text-primary fw-bold">Uploading photo...</small>
+                                                </div>
+                                            </div>
+                                            <div id="carUploadStatus" class="mt-1"></div>
+                                        </div>
+                                        <div class="tab-pane fade" id="urlPhotoTab">
+                                            <input type="url" class="form-control" id="carImageUrlInput" placeholder="https://example.com/car-photo.jpg"
+                                                oninput="document.getElementById('addCarImageUrl').value = this.value;">
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="imageUrl" id="addCarImageUrl" required>
+                                    <div class="invalid-feedback">Please provide a car photo (upload or paste URL).</div>
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add Vehicle</button>
+                                <button type="submit" class="btn btn-primary" id="addCarSubmitBtn">Add Vehicle</button>
                             </div>
                         </form>
                     </div>
@@ -270,6 +297,71 @@
                             }, false);
                         });
                     })();
+
+                    // ===== Car Photo Upload =====
+                    var carPhotoInput = document.getElementById('carPhotoFile');
+                    if (carPhotoInput) {
+                        carPhotoInput.addEventListener('change', function() {
+                            var file = this.files[0];
+                            if (!file) return;
+
+                            // Validate file type
+                            if (!file.type.startsWith('image/')) {
+                                document.getElementById('carUploadStatus').innerHTML =
+                                    '<small class="text-danger"><i class="fas fa-times-circle"></i> Only image files are allowed.</small>';
+                                this.value = '';
+                                return;
+                            }
+
+                            // Validate file size (5MB max)
+                            if (file.size > 5 * 1024 * 1024) {
+                                document.getElementById('carUploadStatus').innerHTML =
+                                    '<small class="text-danger"><i class="fas fa-times-circle"></i> File must be under 5MB.</small>';
+                                this.value = '';
+                                return;
+                            }
+
+                            // Show preview
+                            var reader = new FileReader();
+                            reader.onload = function(e) {
+                                document.getElementById('carPhotoImg').src = e.target.result;
+                                document.getElementById('carPhotoPreview').style.display = 'block';
+                            };
+                            reader.readAsDataURL(file);
+
+                            // Upload to Cloudinary via servlet
+                            document.getElementById('carUploadProgress').style.display = 'block';
+                            document.getElementById('carUploadStatus').innerHTML = '';
+                            document.getElementById('addCarSubmitBtn').disabled = true;
+
+                            var formData = new FormData();
+                            formData.append('carPhoto', file);
+
+                            fetch(CTX_PATH + '/admin/upload_car_photo', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                document.getElementById('carUploadProgress').style.display = 'none';
+                                document.getElementById('addCarSubmitBtn').disabled = false;
+                                if (data.success) {
+                                    document.getElementById('addCarImageUrl').value = data.url;
+                                    document.getElementById('carUploadStatus').innerHTML =
+                                        '<small class="text-success"><i class="fas fa-check-circle"></i> Photo uploaded successfully!</small>';
+                                } else {
+                                    document.getElementById('carUploadStatus').innerHTML =
+                                        '<small class="text-danger"><i class="fas fa-times-circle"></i> ' + (data.message || 'Upload failed') + '</small>';
+                                }
+                            })
+                            .catch(function(err) {
+                                document.getElementById('carUploadProgress').style.display = 'none';
+                                document.getElementById('addCarSubmitBtn').disabled = false;
+                                document.getElementById('carUploadStatus').innerHTML =
+                                    '<small class="text-danger"><i class="fas fa-times-circle"></i> Network error. Try again.</small>';
+                            });
+                        });
+                    }
                 })();
             </script>
 

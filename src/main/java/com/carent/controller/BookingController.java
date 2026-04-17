@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 
+import com.carent.service.CouponService;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +36,7 @@ public class BookingController extends HttpServlet {
     private final BookingService bookingService = new BookingService();
     private final CarService carService = new CarService();
     private final EmailService emailService = new EmailService();
+    private final CouponService couponService = new CouponService();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -90,7 +93,7 @@ public class BookingController extends HttpServlet {
 
         if (!user.isVerified()) {
             json.addProperty("success", false);
-            json.addProperty("message", "Please verify your account before booking.");
+            json.addProperty("message", "Your documents are not yet verified. Please upload your ID and License in your Profile, then wait for admin verification before booking.");
             response.getWriter().write(json.toString());
             return;
         }
@@ -124,6 +127,11 @@ public class BookingController extends HttpServlet {
             json.addProperty("finalPrice", booking.getFinalPrice().toString());
             json.addProperty("totalDays", booking.getTotalDays());
             json.addProperty("redirect", request.getContextPath() + "/profile#bookings");
+
+            // Record coupon usage so user can't use it again
+            if (couponCode != null && !couponCode.trim().isEmpty()) {
+                couponService.recordCouponUsage(user.getUserId(), couponCode.trim());
+            }
 
         } catch (IllegalArgumentException e) {
             json.addProperty("success", false);
@@ -270,8 +278,19 @@ public class BookingController extends HttpServlet {
         String couponCode = request.getParameter("code");
         JsonObject json = new JsonObject();
 
-        com.carent.model.Coupon coupon = new com.carent.service.CouponService().validateCoupon(couponCode);
+        com.carent.model.Coupon coupon = couponService.validateCoupon(couponCode);
         if (coupon != null) {
+            // Check if user already used this coupon
+            HttpSession session = request.getSession(false);
+            if (session != null && session.getAttribute("loggedUser") != null) {
+                User user = (User) session.getAttribute("loggedUser");
+                if (couponService.hasUserUsedCoupon(user.getUserId(), couponCode)) {
+                    json.addProperty("valid", false);
+                    json.addProperty("message", "You have already used this coupon.");
+                    response.getWriter().write(json.toString());
+                    return;
+                }
+            }
             json.addProperty("valid", true);
             json.addProperty("discount", coupon.getDiscountPercentage());
             json.addProperty("code", coupon.getCode());

@@ -31,12 +31,20 @@
                             </a>
                             <a href="#documents" class="list-group-item list-group-item-action" data-bs-toggle="list">
                                 <i class="fas fa-file-alt me-2"></i> Documents
-                                <% if (session.getAttribute("docVerified") == null) { %>
+                                <% com.carent.model.User navUser = (com.carent.model.User) session.getAttribute("loggedUser");
+                                   boolean navHasId = navUser != null && navUser.getIdUrl() != null && !navUser.getIdUrl().trim().isEmpty();
+                                   boolean navHasLicense = navUser != null && navUser.getLicenseUrl() != null && !navUser.getLicenseUrl().trim().isEmpty();
+                                   if (!navHasId || !navHasLicense) { %>
                                 <span class="badge bg-warning text-dark rounded-pill float-end">Pending</span>
+                                <% } else { %>
+                                <span class="badge bg-success rounded-pill float-end"><i class="fas fa-check"></i></span>
                                 <% } %>
                             </a>
                             <a href="#bookings" class="list-group-item list-group-item-action" data-bs-toggle="list">
                                 <i class="fas fa-calendar-alt me-2"></i> My Bookings
+                            </a>
+                            <a href="#expenses" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-wallet me-2"></i> My Expenses
                             </a>
                             <a href="#notifications" class="list-group-item list-group-item-action"
                                 data-bs-toggle="list">
@@ -92,7 +100,8 @@
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">PHONE</label>
                                             <input type="tel" class="form-control" name="phone"
-                                                value="<%= profileUser != null ? profileUser.getPhone() : "" %>" required pattern="^[0-9]{10}$">
+                                                value="<%= profileUser != null ? profileUser.getPhone() : "" %>" required pattern="^[0-9]{10}$" maxlength="10"
+                                                oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Enter 10-digit phone number">
                                             <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
                                         </div>
                                         <div class="col-md-6">
@@ -357,6 +366,13 @@
                                                     Payment Method: <span class="fw-bold">${empty booking.paymentMethod ? 'Cash' : booking.paymentMethod}</span>
                                                     <c:if test="${not empty booking.transactionId}"> | Txn ID: ${booking.transactionId}</c:if>
                                                 </div>
+                                                <c:if test="${booking.paymentStatus == 'Paid'}">
+                                                <div class="mt-2">
+                                                    <a href="${pageContext.request.contextPath}/invoice?bookingId=${booking.bookingId}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                        <i class="fas fa-file-invoice me-1"></i>View Invoice
+                                                    </a>
+                                                </div>
+                                                </c:if>
                                             </div>
                                         </div>
                                         </c:forEach>
@@ -410,10 +426,111 @@
                                                     </button>
                                                 </div>
                                                 </c:if>
+                                                <c:if test="${booking.paymentStatus == 'Paid'}">
+                                                <div class="text-end mt-2">
+                                                    <a href="${pageContext.request.contextPath}/invoice?bookingId=${booking.bookingId}" class="btn btn-sm btn-outline-info" target="_blank">
+                                                        <i class="fas fa-file-invoice me-1"></i>View Invoice
+                                                    </a>
+                                                </div>
+                                                </c:if>
                                             </div>
                                         </div>
                                         </c:forEach>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expenses Tracker Section -->
+                        <div class="tab-pane fade" id="expenses">
+                            <div class="card card-modern p-4">
+                                <h4 class="fw-bold mb-4"><i class="fas fa-wallet me-2 text-primary"></i>My Expenses</h4>
+
+                                <!-- Summary Cards -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 text-center">
+                                            <div class="small text-muted fw-bold">TOTAL SPENT</div>
+                                            <h4 class="fw-bold text-primary" id="totalSpent">Rs. 0</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 text-center">
+                                            <div class="small text-muted fw-bold">TOTAL BOOKINGS</div>
+                                            <h4 class="fw-bold text-success" id="totalBookingsCount">0</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 text-center">
+                                            <div class="small text-muted fw-bold">AVG COST / BOOKING</div>
+                                            <h4 class="fw-bold text-warning" id="avgCost">Rs. 0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Expense Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light text-uppercase small">
+                                            <tr><th>Booking</th><th>Car</th><th>Dates</th><th>Amount</th><th>Payment</th><th>Status</th><th>Invoice</th></tr>
+                                        </thead>
+                                        <tbody id="expenseTableBody">
+                                            <c:set var="totalExpenseAmount" value="0" />
+                                            <c:set var="totalExpenseCount" value="0" />
+                                            <c:forEach var="booking" items="${upcomingBookings}">
+                                                <tr>
+                                                    <td class="fw-bold">#RENT-${booking.bookingId}</td>
+                                                    <td>${booking.carBrand} ${booking.carName}</td>
+                                                    <td class="small">${booking.startDate} → ${booking.endDate}</td>
+                                                    <td class="fw-bold text-primary">Rs. ${booking.finalPrice}</td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${booking.paymentStatus == 'Paid'}"><span class="badge bg-success">Paid</span></c:when>
+                                                            <c:otherwise><span class="badge bg-secondary">Unpaid</span></c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td><span class="badge bg-warning text-dark">${booking.bookingStatus}</span></td>
+                                                    <td>
+                                                        <c:if test="${booking.paymentStatus == 'Paid'}">
+                                                            <a href="${pageContext.request.contextPath}/invoice?bookingId=${booking.bookingId}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-invoice"></i></a>
+                                                        </c:if>
+                                                    </td>
+                                                </tr>
+                                                <c:set var="totalExpenseCount" value="${totalExpenseCount + 1}" />
+                                            </c:forEach>
+                                            <c:forEach var="booking" items="${pastBookings}">
+                                                <tr class="${booking.bookingStatus == 'Cancelled' ? 'text-muted' : ''}">
+                                                    <td class="fw-bold">#RENT-${booking.bookingId}</td>
+                                                    <td>${booking.carBrand} ${booking.carName}</td>
+                                                    <td class="small">${booking.startDate} → ${booking.endDate}</td>
+                                                    <td class="fw-bold text-primary">Rs. ${booking.finalPrice}</td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${booking.paymentStatus == 'Paid'}"><span class="badge bg-success">Paid</span></c:when>
+                                                            <c:when test="${booking.paymentStatus == 'Refunded'}"><span class="badge bg-info">Refunded</span></c:when>
+                                                            <c:otherwise><span class="badge bg-secondary">Unpaid</span></c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${booking.bookingStatus == 'Completed'}"><span class="badge bg-success">Completed</span></c:when>
+                                                            <c:when test="${booking.bookingStatus == 'Cancelled'}"><span class="badge bg-danger">Cancelled</span></c:when>
+                                                            <c:otherwise><span class="badge bg-secondary">${booking.bookingStatus}</span></c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td>
+                                                        <c:if test="${booking.paymentStatus == 'Paid'}">
+                                                            <a href="${pageContext.request.contextPath}/invoice?bookingId=${booking.bookingId}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-invoice"></i></a>
+                                                        </c:if>
+                                                    </td>
+                                                </tr>
+                                                <c:set var="totalExpenseCount" value="${totalExpenseCount + 1}" />
+                                            </c:forEach>
+                                            <c:if test="${totalExpenseCount == 0}">
+                                                <tr><td colspan="7" class="text-center text-muted py-4">No bookings found yet.</td></tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -469,6 +586,66 @@
                     }
                 });
             }
+
+            // Profile form: empty field validation
+            const profileForm = document.getElementById('updateProfileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    const fields = [
+                        { el: profileForm.querySelector('[name="fullName"]'), label: 'Full name is required.' },
+                        { el: profileForm.querySelector('[name="phone"]'), label: 'Phone number is required (10 digits).' },
+                    ];
+                    fields.forEach(function(f) {
+                        const val = f.el.value.trim();
+                        // Clear previous state
+                        f.el.classList.remove('is-invalid');
+                        f.el.style.animation = '';
+                        if (!val) {
+                            isValid = false;
+                            f.el.classList.add('is-invalid');
+                            f.el.style.animation = 'shake 0.4s ease';
+                            // Update the invalid-feedback text
+                            const fb = f.el.parentElement.querySelector('.invalid-feedback');
+                            if (fb) fb.textContent = f.label;
+                            setTimeout(function() { f.el.style.animation = ''; }, 400);
+                        }
+                    });
+                    // Phone: 10 digit check
+                    const phoneEl = profileForm.querySelector('[name="phone"]');
+                    if (phoneEl.value.trim() && !/^[0-9]{10}$/.test(phoneEl.value.trim())) {
+                        isValid = false;
+                        phoneEl.classList.add('is-invalid');
+                        phoneEl.style.animation = 'shake 0.4s ease';
+                        setTimeout(function() { phoneEl.style.animation = ''; }, 400);
+                    }
+                    if (!isValid) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    profileForm.classList.add('was-validated');
+                });
+            }
+
+            // Expense tracker calculations
+            (function() {
+                var rows = document.querySelectorAll('#expenseTableBody tr');
+                var total = 0, count = 0;
+                rows.forEach(function(row) {
+                    var amountCell = row.querySelector('td:nth-child(4)');
+                    if (amountCell) {
+                        var text = amountCell.textContent.replace(/[^0-9.]/g, '');
+                        var val = parseFloat(text);
+                        if (!isNaN(val) && val > 0) { total += val; count++; }
+                    }
+                });
+                var totalEl = document.getElementById('totalSpent');
+                var countEl = document.getElementById('totalBookingsCount');
+                var avgEl = document.getElementById('avgCost');
+                if (totalEl) totalEl.textContent = 'Rs. ' + total.toLocaleString('en-IN');
+                if (countEl) countEl.textContent = count;
+                if (avgEl) avgEl.textContent = 'Rs. ' + (count > 0 ? Math.round(total / count).toLocaleString('en-IN') : '0');
+            })();
 
             const ctx = '${pageContext.request.contextPath}';
             

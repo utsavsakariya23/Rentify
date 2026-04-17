@@ -230,6 +230,22 @@ public class UserDAO {
         return false;
     }
 
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean updateVerificationStatus(int userId, boolean verified) {
         String sql = "UPDATE users SET is_verified = ? WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();

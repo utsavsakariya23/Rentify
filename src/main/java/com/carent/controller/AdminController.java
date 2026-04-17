@@ -122,6 +122,9 @@ public class AdminController extends HttpServlet {
             case "/admin/delete_expense":
                 handleDeleteExpense(request, response);
                 break;
+            case "/admin/send_coupon_notification":
+                handleSendCouponNotification(request, response);
+                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
                 break;
@@ -171,7 +174,22 @@ public class AdminController extends HttpServlet {
             expense.setCategory(category != null ? category : "General");
             expense.setAmount(new BigDecimal(amountStr));
             expense.setExpenseDate(Date.valueOf(dateStr));
-            
+
+            // Handle expense slip photo upload
+            if (request.getContentType() != null && request.getContentType().startsWith("multipart/")) {
+                try {
+                    Part slipPart = request.getPart("expenseSlip");
+                    if (slipPart != null && slipPart.getSize() > 0) {
+                        try (InputStream is = slipPart.getInputStream()) {
+                            String slipUrl = cloudinaryService.uploadImage(is, "expenses");
+                            if (slipUrl != null) expense.setSlipUrl(slipUrl);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Expense slip upload error: " + e.getMessage());
+                }
+            }
+
             boolean success = expenseDAO.addExpense(expense);
             response.sendRedirect(request.getContextPath() + "/admin/finance?expense_success=" + success);
         } catch (Exception e) {
@@ -312,6 +330,7 @@ public class AdminController extends HttpServlet {
         coupon.setDiscountPercentage(new BigDecimal(request.getParameter("discountPercentage")));
         coupon.setExpiryDate(Date.valueOf(request.getParameter("expiryDate")));
         coupon.setActive("on".equals(request.getParameter("isActive")) || "true".equals(request.getParameter("isActive")));
+        coupon.setSuggested("on".equals(request.getParameter("isSuggested")) || "true".equals(request.getParameter("isSuggested")));
         couponService.addCoupon(coupon);
         response.sendRedirect(request.getContextPath() + "/admin/coupons?success=coupon_added");
     }
@@ -323,6 +342,7 @@ public class AdminController extends HttpServlet {
         coupon.setDiscountPercentage(new BigDecimal(request.getParameter("discountPercentage")));
         coupon.setExpiryDate(Date.valueOf(request.getParameter("expiryDate")));
         coupon.setActive("on".equals(request.getParameter("isActive")) || "true".equals(request.getParameter("isActive")));
+        coupon.setSuggested("on".equals(request.getParameter("isSuggested")) || "true".equals(request.getParameter("isSuggested")));
         couponService.updateCoupon(coupon);
         response.sendRedirect(request.getContextPath() + "/admin/coupons?success=coupon_updated");
     }
@@ -363,7 +383,32 @@ public class AdminController extends HttpServlet {
         String action = request.getParameter("action");
         boolean verified = "verify".equals(action);
         userDAO.updateVerificationStatus(userId, verified);
-        response.sendRedirect(request.getContextPath() + "/admin/customers");
+
+        // Send notification and email to user
+        User user = userDAO.getUserById(userId);
+        if (user != null) {
+            com.carent.repository.NotificationDAO notifDAO = new com.carent.repository.NotificationDAO();
+            if (verified) {
+                String notifMsg = "✅ Your documents have been verified! You can now book cars on Rentify.";
+                notifDAO.insertNotification(userId, notifMsg);
+                // Send verification approval email
+                String emailBody = "<h2>Documents Verified!</h2>" +
+                        "<p>Dear " + user.getFullName() + ",</p>" +
+                        "<p>Great news! Your uploaded documents (ID & License) have been <strong>verified</strong> by our team.</p>" +
+                        "<p>You can now book cars on Rentify. Head over to our <a href='#'>Vehicles page</a> to explore available cars!</p>" +
+                        "<p>Thank you for choosing Rentify!<br>The Carent Team</p>";
+                emailService.sendEmailAsync(user.getEmail(), "Documents Verified - Rentify", emailBody);
+            } else {
+                String notifMsg = "⚠️ Your document verification has been revoked. Please re-upload your documents in Profile.";
+                notifDAO.insertNotification(userId, notifMsg);
+                String emailBody = "<h2>Verification Revoked</h2>" +
+                        "<p>Dear " + user.getFullName() + ",</p>" +
+                        "<p>Your document verification has been revoked by an admin. Please re-upload your ID and License documents in your Profile to get verified again.</p>" +
+                        "<p>The Carent Team</p>";
+                emailService.sendEmailAsync(user.getEmail(), "Verification Revoked - Rentify", emailBody);
+            }
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/customers?success=User+" + (verified ? "verified" : "unverified"));
     }
 
     private void handleDeleteUser(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -554,6 +599,21 @@ public class AdminController extends HttpServlet {
             return "\"" + s.replace("\"", "\"\"") + "\"";
         }
         return s;
+    }
+
+    private void handleSendCouponNotification(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String couponCode = request.getParameter("couponCode");
+        String discount = request.getParameter("discount");
+        String expiryDate = request.getParameter("expiryDate");
+        String audienceType = request.getParameter("audienceType");
+        boolean sendEmail = "on".equals(request.getParameter("sendEmail"));
+
+        if (audienceType == null) audienceType = "all";
+
+        String message = "\uD83C\uDF89 Special Offer! Use coupon " + couponCode + " for " + discount + "% off your next booking! Valid until " + expiryDate + ". Book now!";
+
+        notificationService.sendNotification(message, sendEmail, audienceType);
+        response.sendRedirect(request.getContextPath() + "/admin/coupons?success=Coupon+notification+sent+to+" + audienceType + "+users");
     }
 }
 

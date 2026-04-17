@@ -217,6 +217,10 @@ public class PageController extends HttpServlet {
                         request.setAttribute("car", bookCar);
                     } catch (NumberFormatException ignored) {}
                 }
+                // Pass available coupons for the user (active + not yet used)
+                User bookingPageUser = (User) request.getSession(false).getAttribute("loggedUser");
+                com.carent.service.CouponService cpnService = new com.carent.service.CouponService();
+                request.setAttribute("availableCoupons", cpnService.getAvailableCouponsForUser(bookingPageUser.getUserId()));
                 request.getRequestDispatcher("/WEB-INF/views/booking.jsp").forward(request, response);
                 break;
 
@@ -362,11 +366,12 @@ public class PageController extends HttpServlet {
                 request.setAttribute("currentMonthStmt", financeService.getMonthlyStatement(now.getMonthValue(), now.getYear()));
                 request.setAttribute("currentMonth", now.getMonth().getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH));
                 request.setAttribute("currentYear", now.getYear());
+                request.setAttribute("currentMonthNum", now.getMonthValue());
                 request.setAttribute("gstRate", financeService.getGstRate());
                 
-                // Fetch recent expenses
+                // Fetch recent expenses (increased limit for past months view)
                 com.carent.repository.ExpenseDAO expenseDAO = new com.carent.repository.ExpenseDAO();
-                request.setAttribute("recentExpenses", expenseDAO.getRecentExpenses(10));
+                request.setAttribute("recentExpenses", expenseDAO.getRecentExpenses(50));
                 
                 request.getRequestDispatcher("/WEB-INF/views/admin/finance.jsp").forward(request, response);
                 break;

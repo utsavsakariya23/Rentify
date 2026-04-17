@@ -9,15 +9,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExpenseDAO {
+
+    // Auto-migrate: add slip_url column if missing
+    static {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE expenses ADD COLUMN IF NOT EXISTS slip_url VARCHAR(500)");
+        } catch (Exception e) {
+            System.err.println("ExpenseDAO migration (slip_url): " + e.getMessage());
+        }
+    }
     
     public boolean addExpense(Expense expense) {
-        String sql = "INSERT INTO expenses (description, amount, expense_date, category) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO expenses (description, amount, expense_date, category, slip_url) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, expense.getDescription());
             stmt.setBigDecimal(2, expense.getAmount());
             stmt.setDate(3, expense.getExpenseDate());
             stmt.setString(4, expense.getCategory());
+            stmt.setString(5, expense.getSlipUrl());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -43,6 +54,24 @@ public class ExpenseDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    expenses.add(extractExpenseFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return expenses;
+    }
+
+    public List<Expense> getExpensesByMonth(int month, int year) {
+        List<Expense> expenses = new ArrayList<>();
+        String sql = "SELECT * FROM expenses WHERE EXTRACT(MONTH FROM expense_date) = ? AND EXTRACT(YEAR FROM expense_date) = ? ORDER BY expense_date DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, month);
+            stmt.setInt(2, year);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     expenses.add(extractExpenseFromResultSet(rs));
@@ -95,6 +124,7 @@ public class ExpenseDAO {
         expense.setExpenseDate(rs.getDate("expense_date"));
         expense.setCategory(rs.getString("category"));
         expense.setCreatedAt(rs.getTimestamp("created_at"));
+        try { expense.setSlipUrl(rs.getString("slip_url")); } catch (SQLException ignored) {}
         return expense;
     }
 }

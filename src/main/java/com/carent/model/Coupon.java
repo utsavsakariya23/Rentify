@@ -9,6 +9,7 @@ public class Coupon {
     private BigDecimal discountPercentage;
     private Date expiryDate;
     private boolean isActive;
+    private boolean isSuggested;
 
     public Coupon() {}
 
@@ -26,4 +27,7 @@ public class Coupon {
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { this.isActive = active; }
+
+    public boolean isSuggested() { return isSuggested; }
+    public void setSuggested(boolean suggested) { this.isSuggested = suggested; }
 }

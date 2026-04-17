@@ -20,6 +20,36 @@ public class CouponService {
         return couponDAO.getAllCoupons();
     }
 
+    public List<Coupon> getActiveCoupons() {
+        return couponDAO.getActiveCoupons();
+    }
+
+    /**
+     * Get coupons available for a user (active + not yet used by them).
+     */
+    public List<Coupon> getAvailableCouponsForUser(int userId) {
+        return couponDAO.getAvailableCouponsForUser(userId);
+    }
+
+    /**
+     * Check if a user has already used a specific coupon.
+     */
+    public boolean hasUserUsedCoupon(int userId, String couponCode) {
+        Coupon coupon = validateCoupon(couponCode);
+        if (coupon == null) return false;
+        return couponDAO.hasUserUsedCoupon(userId, coupon.getCouponId());
+    }
+
+    /**
+     * Record coupon usage after successful booking.
+     */
+    public void recordCouponUsage(int userId, String couponCode) {
+        Coupon coupon = validateCoupon(couponCode);
+        if (coupon != null) {
+            couponDAO.recordCouponUsage(userId, coupon.getCouponId());
+        }
+    }
+
     public boolean addCoupon(Coupon coupon) {
         return couponDAO.insertCoupon(coupon);
     }
