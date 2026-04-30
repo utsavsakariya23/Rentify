@@ -16,8 +16,8 @@ public class EmailService {
     // TODO: Replace with your Gmail credentials
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
-    private static final String SMTP_USERNAME = "utsavsakariya05@gmail.com";
-    private static final String SMTP_PASSWORD = "hagjxnnclseqjdwn";
+    private static final String SMTP_USERNAME = "";
+    private static final String SMTP_PASSWORD = "";
     private static final String FROM_NAME = "Carent Car Rental";
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(3);
