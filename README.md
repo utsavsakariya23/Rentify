@@ -475,21 +475,6 @@ mvn test
 
 ---
 
-## 📸 Screenshots
-
-> _Add screenshots of your application here._
->
-> Suggested screenshots:
-> - Home page with featured cars
-> - Vehicle listing with search filters
-> - Booking form with Razorpay checkout
-> - User profile dashboard
-> - Admin dashboard overview
-> - Admin analytics page
-> - Admin finance module
-
----
-
 ## 🤝 Contributing
 
 1. **Fork** the repository
@@ -507,5 +492,5 @@ This project is developed for educational purposes.
 ---
 
 <p align="center">
-  Made with ❤️ by <strong>Utsav Sakariya</strong>
+  Made with ❤️ by <strong>Rentify Team</strong>
 </p>
